@@ -7,11 +7,23 @@ const router = express.Router();
 
 router.post('/mall/create', async (req, res) => {
   try {
-    const { buyOrder, sessionId, details } = req.body;
+    const { orderId, items } = req.body;
 
-    if (!buyOrder || !sessionId || !details || !Array.isArray(details)) {
+    // Validación de parámetros
+    if (!orderId || !items || !Array.isArray(items)) {
       return res.status(400).json({ message: 'Parámetros de transacción faltantes o incorrectos' });
     }
+
+    // Transformación de los parámetros para el SDK de Transbank
+    const buyOrder = orderId;  // Usa `orderId` como `buyOrder`
+    const sessionId = `SESSION-${Date.now()}`;  // Genera un sessionId único
+
+    // Transforma `items` en el formato esperado `details`
+    const details = items.map((item, index) => ({
+      commerceCode: '597012345678',  // Código del comercio
+      buyOrder: `${orderId}-${index}`,  // Genera un buyOrder único para cada transacción
+      amount: item.amount
+    }));
 
     const tx = new WebpayPlus.MallTransaction(transbankConfig.mall);
     const response = await tx.create(buyOrder, sessionId, details, transbankConfig.returnUrl);
@@ -28,7 +40,6 @@ router.post('/mall/create', async (req, res) => {
     });
   }
 });
-
 
 // Confirmar transacción mall
 router.post('/mall/confirm', async (req, res) => {
@@ -64,4 +75,3 @@ router.post('/mall/confirm', async (req, res) => {
 });
 
 module.exports = router;
-
