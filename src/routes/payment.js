@@ -1,5 +1,5 @@
 const express = require('express');
-const { WebpayPlus } = require('transbank-sdk');
+const { WebpayPlus, TransactionDetail } = require('transbank-sdk');
 const { transbankConfig } = require('../config/transbank');
 const { validateMallTransaction } = require('../middleware/validateTransaction');
 
@@ -12,17 +12,17 @@ router.post('/mall/create', validateMallTransaction, async (req, res) => {
     const sessionId = `SESSION_${Date.now()}`;
     const returnUrl = `${process.env.FRONTEND_URL}/payment/result`;
 
-    // Usar transbankConfig.mall directamente
-    const tx = new WebpayPlus.MallTransaction(transbankConfig.mall);
+    // Usa TransactionDetail en cada detalle de la transacción
     const details = items.map((item, index) => {
       const store = transbankConfig.stores[item.storeIndex];
-      return {
-        amount: Math.round(item.amount),
-        commerceCode: store.commerceCode,
-        buyOrder: `${orderId.slice(0, 10)}-${store.commerceCode}`.slice(0, 26),
-      };
+      return new TransactionDetail(
+        Math.round(item.amount),
+        store.commerceCode,
+        `${orderId.slice(0, 10)}-${store.commerceCode}`.slice(0, 26)
+      );
     });
 
+    const tx = new WebpayPlus.MallTransaction(transbankConfig.mall);
     const response = await tx.create(orderId, sessionId, returnUrl, details);
 
     res.json({
