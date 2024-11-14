@@ -1,6 +1,6 @@
-import { body, validationResult } from 'express-validator';
+const { body, validationResult } = require('express-validator');
 
-export const validateMallTransaction = [
+const validateMallTransaction = [
   body('items')
     .isArray()
     .withMessage('Los items deben ser un array')
@@ -33,3 +33,5 @@ export const validateMallTransaction = [
     next();
   }
 ];
+
+module.exports = { validateMallTransaction };
