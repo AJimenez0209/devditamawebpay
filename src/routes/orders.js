@@ -1,5 +1,5 @@
-import express from 'express';
-import { body, validationResult } from 'express-validator';
+const express = require('express');
+const { body, validationResult } = require('express-validator');
 const Order = require('../models/Order');
 
 const router = express.Router();
@@ -17,7 +17,8 @@ router.get('/', async (req, res) => {
 });
 
 // Create order
-router.post('/',
+router.post(
+  '/',
   [
     body('items').isArray(),
     body('paymentMethod').isIn(['cash', 'card', 'transfer']),
@@ -34,7 +35,7 @@ router.post('/',
       // Validate payment and delivery method combination
       if (req.body.paymentMethod === 'cash' && req.body.deliveryMethod === 'delivery') {
         return res.status(400).json({
-          message: 'Cash payment is only available for store pickup'
+          message: 'Cash payment is only available for store pickup',
         });
       }
 
@@ -44,10 +45,12 @@ router.post('/',
     } catch (error) {
       res.status(400).json({ message: error.message });
     }
-});
+  }
+);
 
 // Update order status
-router.patch('/:id/status',
+router.patch(
+  '/:id/status',
   body('status').isIn(['pending', 'processing', 'completed', 'cancelled']),
   async (req, res) => {
     const errors = validationResult(req);
@@ -67,6 +70,7 @@ router.patch('/:id/status',
     } catch (error) {
       res.status(400).json({ message: error.message });
     }
-});
+  }
+);
 
-export default router;
+module.exports = router;
