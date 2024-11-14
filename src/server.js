@@ -7,6 +7,8 @@ const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
 const userRoutes = require('./routes/users');
 const paymentRoutes = require('./routes/payment');
+console.log("Payment routes loaded");
+
 
 // Configuración de variables de entorno
 dotenv.config();
