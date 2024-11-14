@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { WebpayRedirectForm } from './WebpayRedirectForm';
 
 interface WebpayMallPaymentProps {
   orderId: string;
@@ -12,6 +13,7 @@ interface WebpayMallPaymentProps {
 export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, items }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentData, setPaymentData] = useState<{ token: string; url: string } | null>(null);
   
   const handleWebpayPayment = async () => {
     try {
@@ -37,7 +39,7 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
       const data = await response.json();
       
       if (data.url && data.token) {
-        window.location.href = data.url;
+        setPaymentData(data);
       } else {
         throw new Error('Respuesta inválida del servidor');
       }
@@ -48,6 +50,10 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
       setLoading(false);
     }
   };
+
+  if (paymentData) {
+    return <WebpayRedirectForm token={paymentData.token} url={paymentData.url} />;
+  }
 
   return (
     <div className="space-y-4">
