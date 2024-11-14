@@ -1,5 +1,5 @@
 const express = require('express');
-const { WebpayPlus } = require('transbank-sdk');
+const { WebpayPlus, TransactionDetail } = require('transbank-sdk');
 const { transbankConfig } = require('../config/transbank');
 const { validateMallTransaction } = require('../middleware/validateTransaction');
 
@@ -9,28 +9,23 @@ const router = express.Router();
 router.post('/mall/create', validateMallTransaction, async (req, res) => {
   try {
     const { items, orderId } = req.body;
-
-    // Validar que items sea un array y tenga al menos un elemento
-    if (!Array.isArray(items) || items.length === 0) {
-      throw new Error("Items must be a non-empty array");
-    }
-
     const sessionId = `SESSION_${Date.now()}`;
     const returnUrl = `${process.env.FRONTEND_URL}/payment/result`;
 
     const tx = new WebpayPlus.MallTransaction(transbankConfig.mall);
 
+    // Asegúrate de que cada detalle sea una instancia de TransactionDetail
     const details = items.map((item) => {
       const store = transbankConfig.stores[item.storeIndex];
       if (!store) {
         throw new Error(`Invalid store index: ${item.storeIndex}`);
       }
       const buyOrder = `${orderId.slice(0, 10)}-${store.commerceCode}`.slice(0, 26);
-      return {
-        amount: Math.round(item.amount),
-        commerceCode: store.commerceCode,
+      return new TransactionDetail(
+        Math.round(item.amount),
+        store.commerceCode,
         buyOrder
-      };
+      );
     });
 
     const response = await tx.create(orderId, sessionId, returnUrl, details);
