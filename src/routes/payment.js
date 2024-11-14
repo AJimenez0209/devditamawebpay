@@ -1,7 +1,7 @@
-import express from 'express';
-import { WebpayPlus } from 'transbank-sdk';
-import { transbankConfig } from '../config/transbank.js';
-import { validateMallTransaction } from '../middleware/validateTransaction.js';
+const express = require('express');
+const { WebpayPlus } = require('transbank-sdk');
+const { transbankConfig } = require('../config/transbank');
+const { validateMallTransaction } = require('../middleware/validateTransaction');
 
 const router = express.Router();
 const config = process.env.NODE_ENV === 'production' ? transbankConfig.production : transbankConfig.integration;
@@ -85,4 +85,4 @@ router.post('/mall/confirm', async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;
