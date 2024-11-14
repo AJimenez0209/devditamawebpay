@@ -30,14 +30,16 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payment', paymentRoutes);
 
-// Manejo de archivos estáticos en producción
-if (process.env.NODE_ENV === 'production') {
+
+// Manejo de archivos estáticos en producción e integración
+if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'integracion') {
   app.use(express.static(join(__dirname, '../dist')));
   
   app.get('*', (req, res) => {
     res.sendFile(join(__dirname, '../dist/index.html'));
   });
 }
+
 
 // Manejador de errores global
 app.use((err, req, res, next) => {
