@@ -37,3 +37,6 @@ router.post('/mall/confirm', async (req, res) => {
     });
   }
 });
+
+module.exports = router;
+
