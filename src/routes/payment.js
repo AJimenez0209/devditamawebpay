@@ -4,7 +4,7 @@ const { transbankConfig } = require('../config/transbank');
 const { validateMallTransaction } = require('../middleware/validateTransaction');
 
 const router = express.Router();
-const config = process.env.NODE_ENV === 'production' ? transbankConfig.production : transbankConfig.integration;
+const config = transbankConfig;
 
 // Crear transacción mall
 router.post('/mall/create', validateMallTransaction, async (req, res) => {
