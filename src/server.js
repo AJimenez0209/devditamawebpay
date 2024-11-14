@@ -1,4 +1,4 @@
-<content>import express from 'express';
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
@@ -15,7 +15,10 @@ const app = express();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Connect to MongoDB
-connectDB();
+connectDB().catch((error) => {
+  console.error('Database connection failed:', error);
+  process.exit(1); // Exit process with failure
+});
 
 // Middleware
 app.use(cors());
@@ -36,7 +39,13 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+// Global Error Handler (optional)
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something went wrong!');
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-});</content>
+});
