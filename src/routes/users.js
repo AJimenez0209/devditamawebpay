@@ -1,13 +1,14 @@
-import express from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { body, validationResult } from 'express-validator';
-import User from '../models/User.js';
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { body, validationResult } = require('express-validator');
+const User = require('../models/User');
 
 const router = express.Router();
 
 // Register user
-router.post('/register',
+router.post(
+  '/register',
   [
     body('name').notEmpty(),
     body('email').isEmail(),
@@ -52,10 +53,12 @@ router.post('/register',
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
-});
+  }
+);
 
 // Login user
-router.post('/login',
+router.post(
+  '/login',
   [
     body('email').isEmail(),
     body('password').exists(),
@@ -92,6 +95,7 @@ router.post('/login',
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
-});
+  }
+);
 
-export default router;
+module.exports = router;
