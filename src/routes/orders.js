@@ -1,6 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import Order from '../models/Order.js';
+const Order = require('../models/Order');
 
 const router = express.Router();
 
