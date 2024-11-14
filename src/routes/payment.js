@@ -19,6 +19,7 @@ router.post('/mall/create', validateMallTransaction, async (req, res) => {
       if (!store) {
         throw new Error(`Invalid store index: ${item.storeIndex}`);
       }
+      const buyOrder = `${orderId}-${store.commerceCode}`.slice(0, 26);
       return {
         amount: Math.round(item.amount),
         commerceCode: store.commerceCode,
