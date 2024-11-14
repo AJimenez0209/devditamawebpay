@@ -14,6 +14,6 @@ export const router = createBrowserRouter([
   },
   {
     path: '/webpay-redirect',
-    element: <WebpayRedirectPage />, // Nueva ruta para redirección
+    element: <WebpayRedirectPage />,
   },
 ]);
