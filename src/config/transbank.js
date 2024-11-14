@@ -1,6 +1,6 @@
-import { Options, IntegrationApiKeys, Environment, IntegrationCommerceCodes } from 'transbank-sdk';
+const { Options, IntegrationApiKeys, Environment, IntegrationCommerceCodes } = require('transbank-sdk');
 
-export const transbankConfig = {
+const transbankConfig = {
   integration: {
     mall: new Options(
       IntegrationCommerceCodes.WEBPAY_PLUS_MALL,
@@ -36,3 +36,5 @@ export const transbankConfig = {
     ]
   }
 };
+
+module.exports = { transbankConfig };
