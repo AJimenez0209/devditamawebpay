@@ -46,14 +46,14 @@
 // module.exports = router;
 
 const express = require('express');
-const { WebpayPlus } = require('transbank-sdk');
+const { WebpayPlus, Options, Environment, IntegrationCommerceCodes, IntegrationApiKeys, TransactionDetail } = require('transbank-sdk');
 const { transbankConfig } = require('../config/transbank');
 const { validateMallTransaction } = require('../middleware/validateTransaction');
 
 const router = express.Router();
 const config = process.env.NODE_ENV === 'production' ? transbankConfig.production : transbankConfig.integration;
 
-// Crear transacción mall
+// Create mall transaction
 router.post('/mall/create', validateMallTransaction, async (req, res) => {
   try {
     const { items, orderId } = req.body;
@@ -61,17 +61,19 @@ router.post('/mall/create', validateMallTransaction, async (req, res) => {
     const returnUrl = `${process.env.FRONTEND_URL}/payment/result`;
 
     const tx = new WebpayPlus.MallTransaction(config.mall);
+
+    // Construye los detalles de la transacción usando `TransactionDetail`
     const details = items.map((item, index) => {
       const store = config.stores[item.storeIndex];
       if (!store) {
         throw new Error(`Invalid store index: ${item.storeIndex}`);
       }
       const buyOrder = `${orderId.slice(0, 10)}-${store.commerceCode}`.slice(0, 26);
-      return {
-        amount: Math.round(item.amount),
-        commerceCode: store.commerceCode,
+      return new TransactionDetail(
+        Math.round(item.amount),
+        store.commerceCode,
         buyOrder
-      };
+      );
     });
 
     const response = await tx.create(orderId, sessionId, returnUrl, details);
