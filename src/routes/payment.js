@@ -10,7 +10,8 @@ router.post('/mall/create', validateMallTransaction, async (req, res) => {
   try {
     const { items, orderId } = req.body;
     const sessionId = `SESSION_${Date.now()}`;
-    const returnUrl = `${process.env.FRONTEND_URL}/payment/result`;
+    const returnUrl = `${process.env.FRONTEND_URL}/payment/result`.replace(/([^:]\/)\/+/g, "$1");
+
 
     const details = items.map((item, index) => {
       const store = transbankConfig.stores[item.storeIndex];
