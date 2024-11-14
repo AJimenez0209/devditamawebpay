@@ -12,7 +12,6 @@ router.post('/mall/create', validateMallTransaction, async (req, res) => {
     const sessionId = `SESSION_${Date.now()}`;
     const returnUrl = `${process.env.FRONTEND_URL}/payment/result`;
 
-    // Usa TransactionDetail en cada detalle de la transacción
     const details = items.map((item, index) => {
       const store = transbankConfig.stores[item.storeIndex];
       return new TransactionDetail(
