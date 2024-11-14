@@ -15,13 +15,13 @@ router.post('/mall/create', async (req, res) => {
     }
 
     // Transformación de los parámetros para el SDK de Transbank
-    const buyOrder = orderId;  // Usa `orderId` como `buyOrder`
-    const sessionId = `SESSION-${Date.now()}`;  // Genera un sessionId único
+    const buyOrder = orderId.toString();  // Usa `orderId` como `buyOrder` y asegúrate de que sea string
+    const sessionId = `SESSION-${Date.now().toString()}`;  // Genera un sessionId único como string
 
     // Transforma `items` en el formato esperado `details`
     const details = items.map((item, index) => ({
       commerceCode: '597012345678',  // Código del comercio
-      buyOrder: `${orderId}-${index}`,  // Genera un buyOrder único para cada transacción
+      buyOrder: `${orderId}-${index}`.toString(),  // Genera un buyOrder único para cada transacción y asegura que sea string
       amount: item.amount
     }));
 
@@ -40,6 +40,7 @@ router.post('/mall/create', async (req, res) => {
     });
   }
 });
+
 
 // Confirmar transacción mall
 router.post('/mall/confirm', async (req, res) => {
