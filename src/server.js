@@ -1,13 +1,13 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import connectDB from './config/database.js';
-import productRoutes from './routes/products.js';
-import orderRoutes from './routes/orders.js';
-import userRoutes from './routes/users.js';
-import paymentRoutes from './routes/payment.js';
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const { fileURLToPath } = require('url');
+const { dirname, join } = require('path');
+const connectDB = require('./config/database');
+const productRoutes = require('./routes/products');
+const orderRoutes = require('./routes/orders');
+const userRoutes = require('./routes/users');
+const paymentRoutes = require('./routes/payment');
 
 dotenv.config();
 
@@ -17,7 +17,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // Connect to MongoDB
 connectDB().catch((error) => {
   console.error('Database connection failed:', error);
-  process.exit(1); // Exit process with failure
+  process.exit(1);
 });
 
 // Middleware
@@ -39,7 +39,7 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// Global Error Handler (optional)
+// Global Error Handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something went wrong!');
