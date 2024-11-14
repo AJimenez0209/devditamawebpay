@@ -1,5 +1,5 @@
 const express = require('express');
-const { WebpayPlus } = require('transbank-sdk');
+const { WebpayPlus, TransactionDetail } = require('transbank-sdk');
 const { transbankConfig } = require('../config/transbank');
 const { validateMallTransaction } = require('../middleware/validateTransaction');
 
@@ -19,15 +19,14 @@ router.post('/mall/create', validateMallTransaction, async (req, res) => {
       if (!store) {
         throw new Error(`Invalid store index: ${item.storeIndex}`);
       }
-      
-      // Ajuste de longitud de buyOrder a un máximo de 26 caracteres
       const buyOrder = `${orderId.slice(0, 10)}-${store.commerceCode}`.slice(0, 26);
       
-      return {
-        amount: Math.round(item.amount),
-        commerceCode: store.commerceCode,
-        buyOrder: buyOrder // Usa la variable buyOrder ajustada
-      };
+      // Crear instancia de TransactionDetail
+      return new TransactionDetail(
+        Math.round(item.amount),
+        store.commerceCode,
+        buyOrder
+      );
     });
 
     const response = await tx.create(orderId, sessionId, returnUrl, details);
