@@ -1,6 +1,6 @@
-import express from 'express';
-import { body, validationResult } from 'express-validator';
-import Product from '../models/Product.js';
+const express = require('express');
+const { body, validationResult } = require('express-validator');
+const Product = require('../models/Product');
 
 const router = express.Router();
 
@@ -28,7 +28,8 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create product
-router.post('/',
+router.post(
+  '/',
   [
     body('name').notEmpty(),
     body('price').isNumeric(),
@@ -51,6 +52,7 @@ router.post('/',
     } catch (error) {
       res.status(400).json({ message: error.message });
     }
-});
+  }
+);
 
-export default router;
+module.exports = router;
