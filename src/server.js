@@ -12,7 +12,7 @@ const paymentRoutes = require('./routes/payment');
 dotenv.config();
 
 const app = express();
-const __dirname = dirname(fileURLToPath(import.meta.url));
+//const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Connect to MongoDB
 connectDB().catch((error) => {
