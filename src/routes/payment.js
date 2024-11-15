@@ -20,10 +20,15 @@ router.post('/mall/create', async (req, res) => {
 
     // Transforma `items` en el formato esperado `details`
     const details = items.map((item, index) => ({
-      commerceCode: '597012345678',  // Código del comercio
+      commerceCode: '597055555535',  // Código del comercio
       buyOrder: `${orderId}-${index}`.toString(),  // Genera un buyOrder único para cada transacción y asegura que sea string
       amount: item.amount
     }));
+
+    // Logs para verificar los valores
+    console.log("buyOrder:", buyOrder);
+    console.log("sessionId:", sessionId);
+    console.log("details:", details);
 
     const tx = new WebpayPlus.MallTransaction(transbankConfig.mall);
     const response = await tx.create(buyOrder, sessionId, details, transbankConfig.returnUrl);
@@ -40,6 +45,7 @@ router.post('/mall/create', async (req, res) => {
     });
   }
 });
+
 
 
 // Confirmar transacción mall
