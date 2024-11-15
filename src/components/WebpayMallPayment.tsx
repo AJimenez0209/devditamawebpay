@@ -25,6 +25,10 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
 
       // Generar un sessionId único
       const sessionId = `SESSION-${Date.now()}`;
+          // Verificar si REACT_APP_FRONTEND_URL está definida
+    if (!process.env.REACT_APP_FRONTEND_URL) {
+      throw new Error('La variable de entorno REACT_APP_FRONTEND_URL no está definida');
+    }
 
       // Usar la variable de entorno FRONTEND_URL para definir returnUrl
       console.log('Frontend URL:', process.env.REACT_APP_FRONTEND_URL);
