@@ -10,4 +10,5 @@ const transbankConfig = new Options(
   environment
 );
 
+
 module.exports = { transbankConfig };
