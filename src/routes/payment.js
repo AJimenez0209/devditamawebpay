@@ -15,6 +15,8 @@ const webpayPlus = new WebpayPlus.Transaction({
 
 // Rutas para crear y confirmar la transacción
 router.post('/create', async (req, res) => {
+  console.log("Request body:", req.body); // Agrega este log
+
   try {
     const { orderId, sessionId, amount, returnUrl } = req.body;
 
@@ -29,6 +31,7 @@ router.post('/create', async (req, res) => {
     res.status(500).json({ message: 'Error al crear la transacción', error: error.message });
   }
 });
+
 
 router.post('/confirm', async (req, res) => {
   try {
