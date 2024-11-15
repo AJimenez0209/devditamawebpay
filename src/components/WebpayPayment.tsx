@@ -1,29 +1,45 @@
 import React, { useState } from 'react';
-import { useCart } from '../context/CartContext';
 import { Loader2 } from 'lucide-react';
+import { WebpayRedirectForm } from './WebpayRedirectForm';
 
-interface WebpayPaymentProps {
+interface WebpayMallPaymentProps {
   orderId: string;
+  items: Array<{
+    amount: number;
+    storeIndex: number;
+  }>;
 }
 
-export const WebpayPayment: React.FC<WebpayPaymentProps> = ({ orderId }) => {
-  const { state } = useCart();
+export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, items }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const [paymentData, setPaymentData] = useState<{ token: string; url: string } | null>(null);
+
   const handleWebpayPayment = async () => {
     try {
       setLoading(true);
       setError(null);
+
+      // Calcular el total del monto
+      const amount = items.reduce((sum, item) => sum + item.amount, 0);
       
-      const response = await fetch('http://localhost:5000/api/payment/create', {
+      // Generar un sessionId único
+      const sessionId = `SESSION-${Date.now()}`;
+      
+      // Definir la URL de retorno
+      const returnUrl = `${process.env.REACT_APP_FRONTEND_URL}/payment/return`;
+
+      const response = await fetch('/api/payment/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: Math.round(state.total),
+          items,
           orderId,
+          sessionId,
+          amount,
+          returnUrl,
         }),
       });
 
@@ -33,9 +49,9 @@ export const WebpayPayment: React.FC<WebpayPaymentProps> = ({ orderId }) => {
       }
 
       const data = await response.json();
-      
+
       if (data.url && data.token) {
-        window.location.href = data.url;
+        setPaymentData(data);
       } else {
         throw new Error('Respuesta inválida del servidor');
       }
@@ -46,6 +62,10 @@ export const WebpayPayment: React.FC<WebpayPaymentProps> = ({ orderId }) => {
       setLoading(false);
     }
   };
+
+  if (paymentData) {
+    return <WebpayRedirectForm token={paymentData.token} url={paymentData.url} />;
+  }
 
   return (
     <div className="space-y-4">
@@ -60,7 +80,7 @@ export const WebpayPayment: React.FC<WebpayPaymentProps> = ({ orderId }) => {
         className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400 flex items-center justify-center gap-2"
       >
         {loading && <Loader2 className="animate-spin" size={20} />}
-        {loading ? 'Procesando...' : 'Pagar con Webpay'}
+        {loading ? 'Procesando...' : 'Pagar con Webpay Mall'}
       </button>
     </div>
   );
