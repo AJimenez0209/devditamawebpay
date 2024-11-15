@@ -14,12 +14,22 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paymentData, setPaymentData] = useState<{ token: string; url: string } | null>(null);
-  
+
   const handleWebpayPayment = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
+      // Calcular el total del monto
+      const amount = items.reduce((sum, item) => sum + item.amount, 0);
+
+      // Generar un sessionId único
+      const sessionId = `SESSION-${Date.now()}`;
+
+      // Usar la variable de entorno FRONTEND_URL para definir returnUrl
+      const returnUrl = `${process.env.REACT_APP_FRONTEND_URL}/payment/return`;
+
+      // Enviar la solicitud al backend
       const response = await fetch('/api/payment/create', {
         method: 'POST',
         headers: {
@@ -28,6 +38,9 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
         body: JSON.stringify({
           items,
           orderId,
+          sessionId,
+          amount,
+          returnUrl,
         }),
       });
 
@@ -37,7 +50,7 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
       }
 
       const data = await response.json();
-      
+
       if (data.url && data.token) {
         setPaymentData(data);
       } else {
@@ -68,7 +81,7 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
         className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400 flex items-center justify-center gap-2"
       >
         {loading && <Loader2 className="animate-spin" size={20} />}
-        {loading ? 'Procesando...' : 'Pagar con Webpay Mall'}
+        {loading ? 'Procesando...' : 'Pagar con Webpay'}
       </button>
     </div>
   );
