@@ -27,7 +27,8 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
       const sessionId = `SESSION-${Date.now()}`;
       
       // Definir la URL de retorno
-      const returnUrl = `${process.env.REACT_APP_FRONTEND_URL}/payment/return`;
+      const returnUrl = `${import.meta.env.VITE_FRONTEND_URL}/payment/return`;
+
 
       const response = await fetch('/api/payment/create', {
         method: 'POST',
