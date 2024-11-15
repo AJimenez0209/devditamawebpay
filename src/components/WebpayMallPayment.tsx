@@ -20,7 +20,7 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
       setLoading(true);
       setError(null);
       
-      const response = await fetch('/api/payment/mall/create', {
+      const response = await fetch('/api/payment/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
