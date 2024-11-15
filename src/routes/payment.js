@@ -1,44 +1,36 @@
 const express = require('express');
-const { WebpayPlus, TransactionDetail } = require('transbank-sdk');
-const { transbankConfig } = require('../config/transbank');
-const { validateMallTransaction } = require('../middleware/validateTransaction');
+const { WebpayPlus } = require('transbank-sdk');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 const router = express.Router();
 
-router.post('/mall/create', async (req, res) => {
+// Configuración de Webpay Plus usando variables de entorno
+const webpayPlus = new WebpayPlus.Transaction({
+  commerceCode: process.env.TRANSBANK_STORE_CODE,
+  apiKey: process.env.TRANSBANK_API_KEY,
+  environment: process.env.NODE_ENV === 'production' ? WebpayPlus.Environment.Production : WebpayPlus.Environment.Integration,
+});
+
+router.post('/payment/create', async (req, res) => {
   try {
-    const { orderId, items } = req.body;
+    const { orderId, sessionId, amount, returnUrl } = req.body;
 
     // Validación de parámetros
-    if (!orderId || !items || !Array.isArray(items)) {
+    if (!orderId || !sessionId || !amount || !returnUrl) {
       return res.status(400).json({ message: 'Parámetros de transacción faltantes o incorrectos' });
     }
 
-    // Transformación de los parámetros para el SDK de Transbank
-    const buyOrder = orderId.toString();  // Usa `orderId` como `buyOrder` y asegúrate de que sea string
-    const sessionId = `SESSION-${Date.now().toString()}`;  // Genera un sessionId único como string
-
-    // Transforma `items` en el formato esperado `details`
-    const details = items.map((item, index) => ({
-      commerceCode: '597055555535',  // Código del comercio
-      buyOrder: `${orderId}-${index}`.toString(),  // Genera un buyOrder único para cada transacción y asegura que sea string
-      amount: item.amount
-    }));
-
-    // Logs para verificar los valores
-    console.log("buyOrder:", buyOrder);
-    console.log("sessionId:", sessionId);
-    console.log("details:", details);
-
-    const tx = new WebpayPlus.MallTransaction(transbankConfig.mall);
-    const response = await tx.create(buyOrder, sessionId, details, transbankConfig.returnUrl);
+    // Crear la transacción
+    const response = await webpayPlus.create(orderId.toString(), sessionId.toString(), amount, returnUrl);
 
     res.json({
       status: 'success',
       response: response,
     });
   } catch (error) {
-    console.error('Error creating mall transaction:', error);
+    console.error('Error creating transaction:', error);
     res.status(500).json({
       message: 'Error al crear la transacción',
       error: error.message,
@@ -46,10 +38,8 @@ router.post('/mall/create', async (req, res) => {
   }
 });
 
-
-
-// Confirmar transacción mall
-router.post('/mall/confirm', async (req, res) => {
+// Confirmar transacción
+router.post('/payment/confirm', async (req, res) => {
   try {
     const { token_ws } = req.body;
 
@@ -57,8 +47,7 @@ router.post('/mall/confirm', async (req, res) => {
       return res.status(400).json({ message: 'Token de transacción faltante' });
     }
 
-    const tx = new WebpayPlus.MallTransaction(transbankConfig.mall);
-    const response = await tx.commit(token_ws);
+    const response = await webpayPlus.commit(token_ws);
 
     if (response.status === 'AUTHORIZED' && response.response_code === 0) {
       res.json({
@@ -73,7 +62,7 @@ router.post('/mall/confirm', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error confirming mall transaction:', error);
+    console.error('Error confirming transaction:', error);
     res.status(500).json({
       message: 'Error al confirmar el pago',
       error: error.message,
