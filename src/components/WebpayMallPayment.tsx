@@ -27,6 +27,7 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
       const sessionId = `SESSION-${Date.now()}`;
 
       // Usar la variable de entorno FRONTEND_URL para definir returnUrl
+      console.log('Frontend URL:', process.env.REACT_APP_FRONTEND_URL);
       const returnUrl = `${process.env.REACT_APP_FRONTEND_URL}/payment/return`;
 
       // Enviar la solicitud al backend
