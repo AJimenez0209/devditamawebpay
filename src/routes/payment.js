@@ -14,7 +14,7 @@ const webpayPlus = new WebpayPlus.Transaction({
 });
 
 // Rutas para crear y confirmar la transacción
-router.post('/payment/create', async (req, res) => {
+router.post('/create', async (req, res) => {
   try {
     const { orderId, sessionId, amount, returnUrl } = req.body;
 
@@ -30,7 +30,7 @@ router.post('/payment/create', async (req, res) => {
   }
 });
 
-router.post('/payment/confirm', async (req, res) => {
+router.post('/confirm', async (req, res) => {
   try {
     const { token_ws } = req.body;
 
