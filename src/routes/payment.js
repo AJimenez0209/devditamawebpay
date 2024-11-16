@@ -53,7 +53,6 @@ router.post('/create', async (req, res) => {
     });
   }
 });
-
 router.post('/confirm', async (req, res) => {
   try {
     const { token_ws } = req.body;
