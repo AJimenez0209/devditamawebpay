@@ -49,22 +49,22 @@ router.post('/confirm', async (req, res) => {
 
     const response = await webpayPlus.commit(token_ws);
 
+    // Manejo de errores específicos de Transbank
     if (response.status === 'AUTHORIZED' && response.response_code === 0) {
       res.json({ status: 'success', response });
+    } else if (response.response_code === 422) {
+      res.status(409).json({ status: 'error', message: 'Transacción bloqueada o en proceso.' });
     } else {
-      const errorMessage =
-        response.response_code === 409
-          ? 'Transacción bloqueada'
-          : 'La transacción no fue autorizada';
-      res.status(400).json({ status: 'error', message: errorMessage, response });
+      res.status(400).json({ status: 'error', message: 'La transacción no fue autorizada', response });
     }
   } catch (error) {
-    const errorMessage =
-      error.message.includes('Transaction already locked')
-        ? 'Transacción bloqueada'
-        : 'Error al confirmar el pago';
+    // Captura del error de concurrencia
+    if (error.message.includes('Transaction already locked by another process')) {
+      return res.status(409).json({ status: 'error', message: 'Transacción ya está siendo procesada.' });
+    }
+
     console.error('Error confirming transaction:', error);
-    res.status(500).json({ message: errorMessage, error: error.message });
+    res.status(500).json({ message: 'Error al confirmar el pago', error: error.message });
   }
 });
 

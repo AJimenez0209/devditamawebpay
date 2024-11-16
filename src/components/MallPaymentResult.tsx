@@ -41,9 +41,10 @@ export const PaymentResult: React.FC = () => {
       }
 
       try {
+        // Obtiene la URL base desde las variables de entorno o el dominio actual
         const apiBaseUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
-        const response = await fetch(`${apiBaseUrl}/api/payment/confirm`, {
 
+        const response = await fetch(`${apiBaseUrl}/api/payment/confirm`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
