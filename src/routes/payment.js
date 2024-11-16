@@ -69,7 +69,7 @@ router.post('/confirm', async (req, res) => {
     const response = await webpayPlus.commit(token_ws);
 
     console.log("Respuesta de confirmación de Webpay Plus:", response);
- 
+
     // Manejo de errores específicos de Transbank
     if (response.status === 'AUTHORIZED' && response.response_code === 0) {
       res.json({ status: 'success', response });
