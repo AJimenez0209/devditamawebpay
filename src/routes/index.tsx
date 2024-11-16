@@ -1,6 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import App from '../App';
-import { MallPaymentResult } from '../components/MallPaymentResult';
+import { PaymentResult } from '../components/MallPaymentResult';
 import WebpayRedirectPage from '../components/WebpayRedirectPage';
 import { CartProvider } from '../context/CartContext'; // Importa el CartProvider
 
@@ -17,7 +17,7 @@ export const router = createBrowserRouter([
     path: '/payment/result',
     element: (
       <CartProvider>
-        <MallPaymentResult />
+        <PaymentResult />
       </CartProvider>
     ),
   },
