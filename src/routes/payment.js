@@ -58,47 +58,40 @@ router.post('/confirm', async (req, res) => {
   try {
     const { token_ws } = req.body;
 
-    // Verifica que el token esté presente
     if (!token_ws) {
-      console.error('Token de transacción faltante');
       return res.status(400).json({ message: 'Token de transacción faltante' });
     }
 
-    // Evita procesar el mismo token más de una vez
-    if (inProcessTransactions.has(token_ws)) {
+    console.log(`Confirmando transacción con token: ${token_ws}`);
+
+    // Verifica si el token ya está siendo procesado
+    if (activeTokens.has(token_ws)) {
       console.warn(`Token ${token_ws} ya está en proceso.`);
       return res.status(409).json({ status: 'error', message: 'Transacción ya está siendo procesada.' });
     }
 
-    inProcessTransactions.add(token_ws);
-    console.log("Confirmando transacción con token:", token_ws);
+    // Marca el token como en proceso
+    activeTokens.add(token_ws);
 
-    // Confirma la transacción
     const response = await webpayPlus.commit(token_ws);
 
-    console.log("Respuesta de confirmación de Webpay Plus:", response);
-
-    inProcessTransactions.delete(token_ws); // Elimina el token después de procesar
+    console.log('Respuesta de confirmación de Webpay Plus:', response);
 
     // Manejo de errores específicos de Transbank
     if (response.status === 'AUTHORIZED' && response.response_code === 0) {
-      return res.json({ status: 'success', response });
+      res.json({ status: 'success', response });
     } else {
-      return res.status(400).json({ status: 'error', message: 'La transacción no fue autorizada', response });
+      res.status(400).json({ status: 'error', message: 'La transacción no fue autorizada', response });
     }
   } catch (error) {
-    inProcessTransactions.delete(req.body.token_ws); // Asegura que el token sea liberado en caso de error
-
-    // Captura del error de concurrencia
-    if (error.message.includes('Transaction already locked by another process')) {
-      console.error('Transacción bloqueada:', error.message);
-      return res.status(409).json({ status: 'error', message: 'Transacción ya está siendo procesada.' });
-    }
-
     console.error('Error confirmando la transacción:', error);
     res.status(500).json({ message: 'Error al confirmar el pago', error: error.message });
+  } finally {
+    // Libera el token al finalizar el proceso
+    activeTokens.delete(token_ws);
   }
 });
+
 
 
 module.exports = router;
