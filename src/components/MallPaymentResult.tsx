@@ -44,7 +44,7 @@ export const MallPaymentResult: React.FC = () => {
       }
 
       try {
-        const response = await fetch('/api/payment/mall/confirm', {
+        const response = await fetch('/api/payment/confirm', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
