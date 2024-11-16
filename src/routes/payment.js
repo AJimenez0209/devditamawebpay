@@ -52,7 +52,8 @@ router.post('/create', async (req, res) => {
   }
 });
 
-// Ruta para confirmar una transacción
+const inProcessTransactions = new Set(); // Almacena los tokens en proceso
+
 router.post('/confirm', async (req, res) => {
   try {
     const { token_ws } = req.body;
@@ -63,6 +64,13 @@ router.post('/confirm', async (req, res) => {
       return res.status(400).json({ message: 'Token de transacción faltante' });
     }
 
+    // Evita procesar el mismo token más de una vez
+    if (inProcessTransactions.has(token_ws)) {
+      console.warn(`Token ${token_ws} ya está en proceso.`);
+      return res.status(409).json({ status: 'error', message: 'Transacción ya está siendo procesada.' });
+    }
+
+    inProcessTransactions.add(token_ws);
     console.log("Confirmando transacción con token:", token_ws);
 
     // Confirma la transacción
@@ -70,15 +78,17 @@ router.post('/confirm', async (req, res) => {
 
     console.log("Respuesta de confirmación de Webpay Plus:", response);
 
+    inProcessTransactions.delete(token_ws); // Elimina el token después de procesar
+
     // Manejo de errores específicos de Transbank
     if (response.status === 'AUTHORIZED' && response.response_code === 0) {
-      res.json({ status: 'success', response });
-    } else if (response.response_code === 422) {
-      res.status(409).json({ status: 'error', message: 'Transacción bloqueada o en proceso.' });
+      return res.json({ status: 'success', response });
     } else {
-      res.status(400).json({ status: 'error', message: 'La transacción no fue autorizada', response });
+      return res.status(400).json({ status: 'error', message: 'La transacción no fue autorizada', response });
     }
   } catch (error) {
+    inProcessTransactions.delete(req.body.token_ws); // Asegura que el token sea liberado en caso de error
+
     // Captura del error de concurrencia
     if (error.message.includes('Transaction already locked by another process')) {
       console.error('Transacción bloqueada:', error.message);
@@ -89,5 +99,6 @@ router.post('/confirm', async (req, res) => {
     res.status(500).json({ message: 'Error al confirmar el pago', error: error.message });
   }
 });
+
 
 module.exports = router;
