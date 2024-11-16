@@ -46,6 +46,7 @@ router.post('/create', async (req, res) => {
 
     console.log("Respuesta de Webpay Plus:", response);
 
+    
     res.json({ status: 'success', response });
   } catch (error) {
     console.error('Error creando la transacción:', error);
