@@ -33,13 +33,15 @@ export const MallPaymentResult: React.FC = () => {
   const { dispatch } = useCart();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [paymentDetails, setPaymentDetails] = useState<PaymentResponse | null>(null);
+  const [error, setError] = useState<string | null>(null); // Agregar estado de error
 
   useEffect(() => {
     const confirmPayment = async () => {
       const token = searchParams.get('token_ws');
-      
+
       if (!token) {
         setStatus('error');
+        setError('Token de transacción faltante');
         return;
       }
 
@@ -53,20 +55,28 @@ export const MallPaymentResult: React.FC = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Error al confirmar el pago');
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Error al confirmar el pago');
         }
 
         const data = await response.json();
-        
+
         if (data.status === 'success') {
           setStatus('success');
           setPaymentDetails(data.response);
           dispatch({ type: 'CLEAR_CART' });
         } else {
-          setStatus('error');
+          throw new Error(data.message || 'Error en el pago');
         }
-      } catch (error) {
-        console.error('Error confirming payment:', error);
+      } catch (err) {
+        console.error('Error confirming payment:', err);
+
+        // Manejar errores de tipo desconocido
+        if (err instanceof Error) {
+          setError(err.message || 'Error desconocido');
+        } else {
+          setError('Error desconocido');
+        }
         setStatus('error');
       }
     };
@@ -96,32 +106,52 @@ export const MallPaymentResult: React.FC = () => {
             <p className="text-lg">Procesando pago...</p>
           </div>
         )}
-        
+
         {status === 'success' && paymentDetails && (
           <div className="text-center">
             <CheckCircle className="text-green-500 mx-auto mb-4" size={48} />
             <h2 className="text-2xl font-bold text-green-600 mb-4">¡Pago Exitoso!</h2>
-            
+
             <div className="mb-6 text-left space-y-3">
               {paymentDetails.details.map((detail, index) => (
                 <div key={index} className="bg-gray-50 p-4 rounded-lg space-y-2">
                   <h3 className="font-semibold text-lg border-b pb-2">
                     Transacción {index + 1}
                   </h3>
-                  <p><span className="font-semibold">Orden:</span> {detail.buyOrder}</p>
-                  <p><span className="font-semibold">Monto:</span> ${detail.amount.toLocaleString()}</p>
-                  <p><span className="font-semibold">Código Autorización:</span> {detail.authorizationCode}</p>
-                  <p><span className="font-semibold">Tipo de Pago:</span> {getPaymentTypeLabel(detail.paymentTypeCode)}</p>
+                  <p>
+                    <span className="font-semibold">Orden:</span> {detail.buyOrder}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Monto:</span> $
+                    {detail.amount.toLocaleString()}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Código Autorización:</span>{' '}
+                    {detail.authorizationCode}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Tipo de Pago:</span>{' '}
+                    {getPaymentTypeLabel(detail.paymentTypeCode)}
+                  </p>
                   {detail.installmentsNumber > 0 && (
-                    <p><span className="font-semibold">Cuotas:</span> {detail.installmentsNumber}</p>
+                    <p>
+                      <span className="font-semibold">Cuotas:</span>{' '}
+                      {detail.installmentsNumber}
+                    </p>
                   )}
                 </div>
               ))}
 
               <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                <p><span className="font-semibold">Fecha:</span> {new Date(paymentDetails.transactionDate).toLocaleString()}</p>
+                <p>
+                  <span className="font-semibold">Fecha:</span>{' '}
+                  {new Date(paymentDetails.transactionDate).toLocaleString()}
+                </p>
                 {paymentDetails.cardDetail?.card_number && (
-                  <p><span className="font-semibold">Tarjeta:</span> **** **** **** {paymentDetails.cardDetail.card_number}</p>
+                  <p>
+                    <span className="font-semibold">Tarjeta:</span> **** **** ****{' '}
+                    {paymentDetails.cardDetail.card_number}
+                  </p>
                 )}
               </div>
 
@@ -152,12 +182,12 @@ export const MallPaymentResult: React.FC = () => {
             </div>
           </div>
         )}
-        
+
         {status === 'error' && (
           <div className="text-center">
             <XCircle className="text-red-500 mx-auto mb-4" size={48} />
             <h2 className="text-2xl font-bold text-red-600 mb-4">Error en el pago</h2>
-            <p className="mb-6">Hubo un problema al procesar tu pago. Por favor, intenta nuevamente.</p>
+            <p className="mb-6">{error || 'Hubo un problema al procesar tu pago. Por favor, intenta nuevamente.'}</p>
             <button
               onClick={() => navigate('/')}
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
