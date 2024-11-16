@@ -3,37 +3,32 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
-interface TransactionDetail {
-  amount: number;
-  status: string;
-  authorizationCode: string;
-  paymentTypeCode: string;
-  responseCode: number;
-  installmentsNumber: number;
-  commerceCode: string;
-  buyOrder: string;
-}
-
 interface PaymentResponse {
-  vci: {
+  vci?: {
     code: string;
     message: string;
   };
-  details: TransactionDetail[];
+  amount?: number; // Se hizo opcional para manejo de errores
+  status?: string;
+  buyOrder?: string;
+  sessionId?: string;
   cardDetail?: {
     card_number: string;
   };
-  accountingDate: string;
-  transactionDate: string;
+  transactionDate?: string;
+  authorizationCode?: string;
+  paymentTypeCode?: string;
+  responseCode?: number;
+  installmentsNumber?: number;
+  message?: string; // Mensaje de error desde el backend
 }
 
-export const MallPaymentResult: React.FC = () => {
+export const PaymentResult: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { dispatch } = useCart();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [paymentDetails, setPaymentDetails] = useState<PaymentResponse | null>(null);
-  const [error, setError] = useState<string | null>(null); // Agregar estado de error
 
   useEffect(() => {
     const confirmPayment = async () => {
@@ -41,12 +36,12 @@ export const MallPaymentResult: React.FC = () => {
 
       if (!token) {
         setStatus('error');
-        setError('Token de transacción faltante');
+        setPaymentDetails({ message: 'Token de transacción no encontrado.' });
         return;
       }
 
       try {
-        const response = await fetch('/api/payment/confirm', {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payment/confirm`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -68,33 +63,28 @@ export const MallPaymentResult: React.FC = () => {
         } else {
           throw new Error(data.message || 'Error en el pago');
         }
-      } catch (err) {
-        console.error('Error confirming payment:', err);
-
-        // Manejar errores de tipo desconocido
-        if (err instanceof Error) {
-          setError(err.message || 'Error desconocido');
-        } else {
-          setError('Error desconocido');
-        }
+      } catch (error: unknown) {
+        console.error('Error confirming payment:', error);
         setStatus('error');
+        setPaymentDetails({
+          message: error instanceof Error ? error.message : 'Error desconocido al procesar el pago.',
+        });
       }
     };
 
     confirmPayment();
   }, [searchParams, dispatch]);
 
-  const getPaymentTypeLabel = (code: string) => {
+  const getPaymentTypeLabel = (code: string | undefined) => {
     const types: Record<string, string> = {
       VD: 'Débito',
       VN: 'Crédito',
       VC: 'Crédito',
-      SI: '3 cuotas sin interés',
-      S2: '2 cuotas sin interés',
-      NC: 'N cuotas sin interés',
-      VP: 'Prepago',
+      SI: 'Crédito',
+      S2: 'Crédito',
+      NC: 'Crédito',
     };
-    return types[code] || code;
+    return code ? types[code] || code : 'Desconocido';
   };
 
   return (
@@ -113,45 +103,17 @@ export const MallPaymentResult: React.FC = () => {
             <h2 className="text-2xl font-bold text-green-600 mb-4">¡Pago Exitoso!</h2>
 
             <div className="mb-6 text-left space-y-3">
-              {paymentDetails.details.map((detail, index) => (
-                <div key={index} className="bg-gray-50 p-4 rounded-lg space-y-2">
-                  <h3 className="font-semibold text-lg border-b pb-2">
-                    Transacción {index + 1}
-                  </h3>
-                  <p>
-                    <span className="font-semibold">Orden:</span> {detail.buyOrder}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Monto:</span> $
-                    {detail.amount.toLocaleString()}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Código Autorización:</span>{' '}
-                    {detail.authorizationCode}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Tipo de Pago:</span>{' '}
-                    {getPaymentTypeLabel(detail.paymentTypeCode)}
-                  </p>
-                  {detail.installmentsNumber > 0 && (
-                    <p>
-                      <span className="font-semibold">Cuotas:</span>{' '}
-                      {detail.installmentsNumber}
-                    </p>
-                  )}
-                </div>
-              ))}
-
               <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                <p>
-                  <span className="font-semibold">Fecha:</span>{' '}
-                  {new Date(paymentDetails.transactionDate).toLocaleString()}
-                </p>
+                <p><span className="font-semibold">Orden:</span> {paymentDetails.buyOrder}</p>
+                <p><span className="font-semibold">Monto:</span> ${paymentDetails.amount?.toLocaleString()}</p>
+                <p><span className="font-semibold">Fecha:</span> {new Date(paymentDetails.transactionDate || '').toLocaleString()}</p>
+                <p><span className="font-semibold">Código Autorización:</span> {paymentDetails.authorizationCode}</p>
                 {paymentDetails.cardDetail?.card_number && (
-                  <p>
-                    <span className="font-semibold">Tarjeta:</span> **** **** ****{' '}
-                    {paymentDetails.cardDetail.card_number}
-                  </p>
+                  <p><span className="font-semibold">Tarjeta:</span> **** **** **** {paymentDetails.cardDetail.card_number}</p>
+                )}
+                <p><span className="font-semibold">Tipo de Pago:</span> {getPaymentTypeLabel(paymentDetails.paymentTypeCode)}</p>
+                {paymentDetails.installmentsNumber && (
+                  <p><span className="font-semibold">Cuotas:</span> {paymentDetails.installmentsNumber}</p>
                 )}
               </div>
 
@@ -187,7 +149,7 @@ export const MallPaymentResult: React.FC = () => {
           <div className="text-center">
             <XCircle className="text-red-500 mx-auto mb-4" size={48} />
             <h2 className="text-2xl font-bold text-red-600 mb-4">Error en el pago</h2>
-            <p className="mb-6">{error || 'Hubo un problema al procesar tu pago. Por favor, intenta nuevamente.'}</p>
+            <p className="mb-6">{paymentDetails?.message || 'Hubo un problema al procesar tu pago.'}</p>
             <button
               onClick={() => navigate('/')}
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
