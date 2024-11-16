@@ -57,6 +57,8 @@ export const PaymentResult: React.FC = () => {
 
         const data = await response.json();
 
+        console.log('Respuesta del servidor:', data); // LOG IMPORTANTE
+
         if (data.status === 'success') {
           setStatus('success');
           setPaymentDetails(data.response);
