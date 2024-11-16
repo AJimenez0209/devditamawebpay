@@ -15,12 +15,15 @@ const webpayPlus = new WebpayPlus.Transaction({
 
 // Rutas para crear y confirmar la transacción
 router.post('/create', async (req, res) => {
-  console.log("Request body:", req.body); // Agrega este log
+  console.log("Request body:", req.body); // Log para depuración
 
   try {
-    const { orderId, sessionId, amount, returnUrl } = req.body;
+    const { orderId, sessionId, amount } = req.body;
 
-    if (!orderId || !sessionId || !amount || !returnUrl) {
+    // Construcción de returnUrl desde la variable de entorno FRONTEND_URL
+    const returnUrl = `${process.env.FRONTEND_URL}/payment/result`.replace(/([^:]\/)\/+/g, "$1");
+
+    if (!orderId || !sessionId || !amount) {
       return res.status(400).json({ message: 'Parámetros de transacción faltantes o incorrectos' });
     }
 
@@ -31,7 +34,6 @@ router.post('/create', async (req, res) => {
     res.status(500).json({ message: 'Error al crear la transacción', error: error.message });
   }
 });
-
 
 router.post('/confirm', async (req, res) => {
   try {
