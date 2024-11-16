@@ -45,6 +45,7 @@ router.post('/create', async (req, res) => {
       console.error('Error detallado de Transbank:', error.response.data);
     }
 
+    
     res.status(500).json({
       message: 'Error al crear la transacción',
       error: error.message || 'Error desconocido',
