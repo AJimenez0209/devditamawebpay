@@ -13,11 +13,11 @@ const webpayPlus = new WebpayPlus.Transaction({
   environment: process.env.NODE_ENV === 'production' ? Environment.Production : Environment.Integration,
 });
 
-// Rutas para crear y confirmar la transacción
+// Ruta para crear una transacción
 router.post('/create', async (req, res) => {
-  console.log("Request body recibido:", req.body); // Log detallado del request
-
   try {
+    console.log("Request body recibido:", req.body); // Log detallado del request
+
     const { orderId, sessionId, amount } = req.body;
 
     // Verifica que los parámetros obligatorios estén presentes
@@ -26,19 +26,9 @@ router.post('/create', async (req, res) => {
       return res.status(400).json({ message: 'Parámetros de transacción faltantes o incorrectos' });
     }
 
-    // Continúa con la ejecución
-  } catch (error) {
-    console.error('Error inesperado:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
-  }
-});
+    // Genera el returnUrl directamente en el backend
+    const returnUrl = `${process.env.FRONTEND_URL}/payment/result`.replace(/([^:]\/)\/+/g, "$1");
 
-
-  // Construcción de returnUrl desde la variable de entorno FRONTEND_URL
-  const returnUrl = `${process.env.FRONTEND_URL}/payment/result`.replace(/([^:]\/)\/+/g, "$1");
-
-
-    try {
     console.log("Generando transacción con los siguientes datos:", { orderId, sessionId, amount, returnUrl });
 
     // Crea la transacción
@@ -46,7 +36,6 @@ router.post('/create', async (req, res) => {
 
     console.log("Respuesta de Webpay Plus:", response);
 
-    
     res.json({ status: 'success', response });
   } catch (error) {
     console.error('Error creando la transacción:', error);
@@ -61,16 +50,25 @@ router.post('/create', async (req, res) => {
       error: error.message || 'Error desconocido',
     });
   }
+});
 
+// Ruta para confirmar una transacción
 router.post('/confirm', async (req, res) => {
   try {
     const { token_ws } = req.body;
 
+    // Verifica que el token esté presente
     if (!token_ws) {
+      console.error('Token de transacción faltante');
       return res.status(400).json({ message: 'Token de transacción faltante' });
     }
 
+    console.log("Confirmando transacción con token:", token_ws);
+
+    // Confirma la transacción
     const response = await webpayPlus.commit(token_ws);
+
+    console.log("Respuesta de confirmación de Webpay Plus:", response);
 
     // Manejo de errores específicos de Transbank
     if (response.status === 'AUTHORIZED' && response.response_code === 0) {
@@ -83,14 +81,13 @@ router.post('/confirm', async (req, res) => {
   } catch (error) {
     // Captura del error de concurrencia
     if (error.message.includes('Transaction already locked by another process')) {
+      console.error('Transacción bloqueada:', error.message);
       return res.status(409).json({ status: 'error', message: 'Transacción ya está siendo procesada.' });
     }
 
-    console.error('Error confirming transaction:', error);
+    console.error('Error confirmando la transacción:', error);
     res.status(500).json({ message: 'Error al confirmar el pago', error: error.message });
   }
 });
-
-
 
 module.exports = router;
