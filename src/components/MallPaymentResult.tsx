@@ -34,36 +34,34 @@ export const PaymentResult: React.FC = () => {
   useEffect(() => {
     const confirmPayment = async () => {
       const token = searchParams.get('token_ws');
+  
       if (!token) {
         setStatus('error');
         setPaymentDetails({ message: 'Token de transacción no encontrado.' });
         return;
       }
-
-      if (isRequesting) return; // Prevenir solicitudes duplicadas
+  
+      // Prevenir solicitudes duplicadas
+      if (isRequesting) return;
       setIsRequesting(true);
-
+  
       try {
         const apiBaseUrl = import.meta.env.VITE_BACKEND_URL || window.location.origin;
         const response = await fetch(`${apiBaseUrl}/api/payment/confirm`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({ token_ws: token }),
         });
-
+  
         if (!response.ok) {
           const errorData = await response.json();
-          if (response.status === 409) {
-            console.warn('Transacción ya en proceso:', errorData.message);
-            setStatus('error');
-            setPaymentDetails({ message: errorData.message });
-          } else {
-            throw new Error(errorData.message || 'Error al confirmar el pago');
-          }
-          return;
+          throw new Error(errorData.message || 'Error al confirmar el pago');
         }
-
+  
         const data = await response.json();
+  
         if (data.status === 'success') {
           setStatus('success');
           setPaymentDetails(data.response);
@@ -71,23 +69,18 @@ export const PaymentResult: React.FC = () => {
         } else {
           throw new Error(data.message || 'Error en el pago');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error confirmando el pago:', error);
         setStatus('error');
-      
-        if (error instanceof Error) {
-          setPaymentDetails({ message: error.message || 'Error desconocido' });
-        } else {
-          setPaymentDetails({ message: 'Error desconocido al procesar el pago.' });
-        }
+        setPaymentDetails({ message: error.message || 'Error desconocido al procesar el pago.' });
       } finally {
-        setIsRequesting(false); // Permitir nuevas solicitudes
+        setIsRequesting(false);
       }
-      
     };
-
+  
     confirmPayment();
   }, [searchParams, dispatch, isRequesting]);
+  
 
   const getPaymentTypeLabel = (code: string | undefined) => {
     const types: Record<string, string> = {
