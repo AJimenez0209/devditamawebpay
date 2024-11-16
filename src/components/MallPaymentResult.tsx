@@ -8,7 +8,7 @@ interface PaymentResponse {
     code: string;
     message: string;
   };
-  amount?: number; // Se hizo opcional para manejo de errores
+  amount?: number;
   status?: string;
   buyOrder?: string;
   sessionId?: string;
@@ -23,7 +23,7 @@ interface PaymentResponse {
   message?: string; // Mensaje de error desde el backend
 }
 
-export const PaymentResult: React.FC = () => {
+export const MallPaymentResult: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { dispatch } = useCart();
@@ -41,9 +41,7 @@ export const PaymentResult: React.FC = () => {
       }
 
       try {
-        // Obtiene la URL base desde las variables de entorno o el dominio actual
         const apiBaseUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
-
         const response = await fetch(`${apiBaseUrl}/api/payment/confirm`, {
           method: 'POST',
           headers: {
@@ -90,6 +88,12 @@ export const PaymentResult: React.FC = () => {
     return code ? types[code] || code : 'Desconocido';
   };
 
+  const formatTransactionDate = (dateString?: string) => {
+    if (!dateString) return 'Fecha no disponible';
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? 'Fecha no válida' : date.toLocaleString();
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
@@ -107,10 +111,10 @@ export const PaymentResult: React.FC = () => {
 
             <div className="mb-6 text-left space-y-3">
               <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                <p><span className="font-semibold">Orden:</span> {paymentDetails.buyOrder}</p>
-                <p><span className="font-semibold">Monto:</span> ${paymentDetails.amount?.toLocaleString()}</p>
-                <p><span className="font-semibold">Fecha:</span> {new Date(paymentDetails.transactionDate || '').toLocaleString()}</p>
-                <p><span className="font-semibold">Código Autorización:</span> {paymentDetails.authorizationCode}</p>
+                <p><span className="font-semibold">Orden:</span> {paymentDetails.buyOrder || 'No disponible'}</p>
+                <p><span className="font-semibold">Monto:</span> ${paymentDetails.amount?.toLocaleString() || 'No disponible'}</p>
+                <p><span className="font-semibold">Fecha:</span> {formatTransactionDate(paymentDetails.transactionDate)}</p>
+                <p><span className="font-semibold">Código Autorización:</span> {paymentDetails.authorizationCode || 'No disponible'}</p>
                 {paymentDetails.cardDetail?.card_number && (
                   <p><span className="font-semibold">Tarjeta:</span> **** **** **** {paymentDetails.cardDetail.card_number}</p>
                 )}
