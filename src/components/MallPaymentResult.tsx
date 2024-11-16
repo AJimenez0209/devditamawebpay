@@ -41,7 +41,9 @@ export const PaymentResult: React.FC = () => {
       }
 
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payment/confirm`, {
+        const apiBaseUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
+        const response = await fetch(`${apiBaseUrl}/api/payment/confirm`, {
+
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
