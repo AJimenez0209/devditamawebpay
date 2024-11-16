@@ -26,9 +26,19 @@ router.post('/create', async (req, res) => {
       return res.status(400).json({ message: 'Parámetros de transacción faltantes o incorrectos' });
     }
 
-    // Genera el returnUrl directamente en el backend
-    const returnUrl = `${process.env.FRONTEND_URL}/payment/result`.replace(/([^:]\/)\/+/g, "$1");
+    // Continúa con la ejecución
+  } catch (error) {
+    console.error('Error inesperado:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+});
 
+
+  // Construcción de returnUrl desde la variable de entorno FRONTEND_URL
+  const returnUrl = `${process.env.FRONTEND_URL}/payment/result`.replace(/([^:]\/)\/+/g, "$1");
+
+
+    try {
     console.log("Generando transacción con los siguientes datos:", { orderId, sessionId, amount, returnUrl });
 
     // Crea la transacción
@@ -46,13 +56,12 @@ router.post('/create', async (req, res) => {
       console.error('Error detallado de Transbank:', error.response.data);
     }
 
-
     res.status(500).json({
       message: 'Error al crear la transacción',
       error: error.message || 'Error desconocido',
     });
   }
-});
+
 router.post('/confirm', async (req, res) => {
   try {
     const { token_ws } = req.body;
