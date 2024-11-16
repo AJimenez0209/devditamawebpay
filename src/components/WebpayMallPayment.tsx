@@ -26,7 +26,7 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
       // Generar un sessionId único
       const sessionId = `SESSION-${Date.now()}`;
 
-      // Enviar la solicitud al backend sin returnUrl
+      // Enviar la solicitud al backend (el backend genera el `returnUrl`)
       const response = await fetch('/api/payment/create', {
         method: 'POST',
         headers: {
@@ -46,14 +46,15 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
       }
 
       const data = await response.json();
+      console.log('Respuesta del backend:', data); // Log para depuración
 
-      if (data.url && data.token) {
-        setPaymentData(data);
+      if (data.response?.url && data.response?.token) {
+        setPaymentData({ token: data.response.token, url: data.response.url }); // Ajusta para acceder correctamente
       } else {
         throw new Error('Respuesta inválida del servidor');
       }
     } catch (error) {
-      console.error('Error initiating payment:', error);
+      console.error('Error iniciando el pago:', error);
       setError(error instanceof Error ? error.message : 'Error desconocido');
     } finally {
       setLoading(false);
