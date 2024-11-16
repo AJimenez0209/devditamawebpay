@@ -45,17 +45,26 @@ router.post('/confirm', async (req, res) => {
       return res.status(400).json({ message: 'Token de transacción faltante' });
     }
 
-    const response = await webpayPlus.commit(token_ws);
+    try {
+      const response = await webpayPlus.commit(token_ws);
 
-    if (response.status === 'AUTHORIZED' && response.response_code === 0) {
-      res.json({ status: 'success', response });
-    } else {
-      res.status(400).json({ status: 'error', message: 'La transacción no fue autorizada', response });
+      if (response.status === 'AUTHORIZED' && response.response_code === 0) {
+        res.json({ status: 'success', response });
+      } else {
+        res.status(400).json({ status: 'error', message: 'La transacción no fue autorizada', response });
+      }
+    } catch (error) {
+      if (error.message.includes('Transaction already locked')) {
+        console.error('Error confirming transaction: Transacción bloqueada');
+        return res.status(409).json({ message: 'La transacción está bloqueada por otro proceso. Por favor, inténtalo más tarde.' });
+      }
+      throw error;
     }
   } catch (error) {
     console.error('Error confirming transaction:', error);
     res.status(500).json({ message: 'Error al confirmar el pago', error: error.message });
   }
 });
+
 
 module.exports = router;
