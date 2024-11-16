@@ -50,34 +50,23 @@ router.post('/confirm', async (req, res) => {
   try {
     const response = await webpayPlus.commit(token_ws);
 
-    // Validar el estado de la respuesta
     if (response.status === 'AUTHORIZED' && response.response_code === 0) {
       console.log("Transacción confirmada con éxito:", response);
-      return res.json({
-        status: 'success',
-        response: {
-          buyOrder: response.buy_order || 'No disponible',
-          sessionId: response.session_id || 'No disponible',
-          amount: response.amount || 0,
-          transactionDate: response.transaction_date || null,
-          authorizationCode: response.authorization_code || 'No disponible',
-          paymentTypeCode: response.payment_type_code || 'Desconocido',
-          installmentsNumber: response.installments_number || 0,
-          cardDetail: response.card_detail || { card_number: '****' },
-        },
-      });
+      res.json({ status: 'success', response });
     } else {
-      console.error("Error en la confirmación de la transacción:", response);
-      return res.status(400).json({ message: 'La transacción no fue autorizada.', response });
+      console.error("Error en la transacción:", response);
+      res.status(400).json({ status: 'error', message: 'La transacción no fue autorizada', response });
     }
   } catch (error) {
-    console.error('Error procesando la transacción:', error);
-    return res.status(500).json({ message: 'Error interno al confirmar el pago', error: error.message });
+    console.error('Error confirmando la transacción:', error);
+    res.status(500).json({ message: 'Error al confirmar el pago', error: error.message });
   } finally {
-    // Libera el token del Set
+    // Libera el token del Set en todos los casos
+    console.log(`Liberando token: ${token_ws}`);
     activeTokens.delete(token_ws);
   }
 });
+
 
 
 module.exports = router;
