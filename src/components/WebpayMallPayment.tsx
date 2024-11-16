@@ -26,11 +26,7 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
       // Generar un sessionId único
       const sessionId = `SESSION-${Date.now()}`;
 
-      // Usar la variable de entorno FRONTEND_URL para definir returnUrl
-      const returnUrl = `${import.meta.env.VITE_FRONTEND_URL}/payment/return`;
-
-
-      // Enviar la solicitud al backend
+      // Enviar la solicitud al backend sin returnUrl
       const response = await fetch('/api/payment/create', {
         method: 'POST',
         headers: {
@@ -41,7 +37,6 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
           orderId,
           sessionId,
           amount,
-          returnUrl,
         }),
       });
 

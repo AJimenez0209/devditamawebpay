@@ -22,14 +22,11 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
 
       // Calcular el total del monto
       const amount = items.reduce((sum, item) => sum + item.amount, 0);
-      
+
       // Generar un sessionId único
       const sessionId = `SESSION-${Date.now()}`;
-      
-      // Definir la URL de retorno
-      const returnUrl = `${import.meta.env.VITE_FRONTEND_URL}/payment/return`;
 
-
+      // Enviar la solicitud al backend sin returnUrl
       const response = await fetch('/api/payment/create', {
         method: 'POST',
         headers: {
@@ -40,7 +37,6 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
           orderId,
           sessionId,
           amount,
-          returnUrl,
         }),
       });
 
