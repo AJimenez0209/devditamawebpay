@@ -15,27 +15,51 @@ const webpayPlus = new WebpayPlus.Transaction({
 
 // Rutas para crear y confirmar la transacción
 router.post('/create', async (req, res) => {
-  console.log("Request body:", req.body); // Log para depuración
+  console.log("Request body recibido:", req.body); // Log detallado del request
 
- try {
-  const { orderId, sessionId, amount } = req.body;
+  try {
+    const { orderId, sessionId, amount } = req.body;
 
-  // Verifica que los parámetros obligatorios estén presentes
-  if (!orderId || !sessionId || !amount) {
-    return res.status(400).json({ message: 'Parámetros de transacción faltantes o incorrectos' });
+    // Verifica que los parámetros obligatorios estén presentes
+    if (!orderId || !sessionId || !amount || isNaN(amount) || amount <= 0) {
+      console.error('Parámetros de transacción faltantes o incorrectos:', { orderId, sessionId, amount });
+      return res.status(400).json({ message: 'Parámetros de transacción faltantes o incorrectos' });
+    }
+
+    // Continúa con la ejecución
+  } catch (error) {
+    console.error('Error inesperado:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
+});
+
 
   // Construcción de returnUrl desde la variable de entorno FRONTEND_URL
   const returnUrl = `${process.env.FRONTEND_URL}/payment/result`.replace(/([^:]\/)\/+/g, "$1");
 
-  const response = await webpayPlus.create(orderId.toString(), sessionId.toString(), amount, returnUrl);
-  res.json({ status: 'success', response });
-} catch (error) {
-  console.error('Error creating transaction:', error);
-  res.status(500).json({ message: 'Error al crear la transacción', error: error.message });
-}
 
-});
+    try {
+    console.log("Generando transacción con los siguientes datos:", { orderId, sessionId, amount, returnUrl });
+
+    // Crea la transacción
+    const response = await webpayPlus.create(orderId.toString(), sessionId.toString(), amount, returnUrl);
+
+    console.log("Respuesta de Webpay Plus:", response);
+
+    res.json({ status: 'success', response });
+  } catch (error) {
+    console.error('Error creando la transacción:', error);
+
+    // Verifica si el error proviene de Transbank
+    if (error.response) {
+      console.error('Error detallado de Transbank:', error.response.data);
+    }
+
+    res.status(500).json({
+      message: 'Error al crear la transacción',
+      error: error.message || 'Error desconocido',
+    });
+  }
 
 router.post('/confirm', async (req, res) => {
   try {
