@@ -23,7 +23,7 @@ interface PaymentResponse {
   message?: string; // Mensaje de error desde el backend
 }
 
-export const MallPaymentResult: React.FC = () => {
+export const PaymentResult: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { dispatch } = useCart();
