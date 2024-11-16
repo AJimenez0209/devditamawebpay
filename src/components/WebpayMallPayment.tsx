@@ -23,7 +23,6 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
       // Calcular el total del monto
       const amount = items.reduce((sum, item) => sum + item.amount, 0);
 
-      
       // Generar un sessionId único
       const sessionId = `SESSION-${Date.now()}`;
 
