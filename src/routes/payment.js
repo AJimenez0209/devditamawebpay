@@ -41,9 +41,7 @@ router.post('/confirm', async (req, res) => {
     return res.status(400).json({ message: 'Token de transacción faltante' });
   }
 
-  console.log(`Confirmando transacción con token: ${token_ws}`);
-
-  // Rechaza solicitudes duplicadas
+  // Verifica si el token ya está en proceso para evitar duplicados
   if (activeTokens.has(token_ws)) {
     console.log(`Token ${token_ws} ya está en proceso.`);
     return res.status(409).json({ message: 'La transacción ya está siendo procesada.' });
@@ -53,26 +51,37 @@ router.post('/confirm', async (req, res) => {
   activeTokens.set(token_ws, true);
 
   try {
+    // Confirma la transacción con Webpay Plus
     const response = await webpayPlus.commit(token_ws);
 
-    if (response.status === 'AUTHORIZED' && response.response_code === 0) {
+    // Verifica si la transacción fue autorizada
+    if (response.response_code === 0 && response.status === 'AUTHORIZED') {
       console.log('Transacción confirmada con éxito:', response);
 
-      res.json({ status: 'success', response });
+      return res.json({ status: 'success', response });
     } else {
       console.error('Error en la transacción:', response);
-      res.status(400).json({ status: 'error', message: 'La transacción no fue autorizada', response });
+      return res.status(400).json({
+        status: 'error',
+        message: 'La transacción no fue autorizada',
+        response,
+      });
     }
   } catch (error) {
     console.error('Error confirmando la transacción:', error);
-    res.status(500).json({ message: 'Error al confirmar el pago', error: error.message });
+    return res.status(500).json({
+      status: 'error',
+      message: 'Error al confirmar la transacción',
+      error: error.message,
+    });
   } finally {
-    // Libera el token del Mapa después de un breve retardo para manejar solicitudes concurrentes
+    // Libera el token después de 3 segundos para evitar bloqueos innecesarios
     setTimeout(() => {
       console.log(`Liberando token: ${token_ws}`);
       activeTokens.delete(token_ws);
-    }, 3000); // 3 segundos de espera
+    }, 3000);
   }
 });
+
 
 module.exports = router;

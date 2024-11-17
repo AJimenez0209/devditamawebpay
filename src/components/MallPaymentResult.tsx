@@ -31,55 +31,59 @@ export const PaymentResult: React.FC = () => {
   const [paymentDetails, setPaymentDetails] = useState<PaymentResponse | null>(null);
   const [isRequesting, setIsRequesting] = useState(false); // Previene duplicados
 
-useEffect(() => {
-  const confirmPayment = async () => {
-    const token = searchParams.get('token_ws');
-
-    if (!token) {
-      setStatus('error');
-      setPaymentDetails({ message: 'Token de transacción no encontrado.' });
-      return;
-    }
-
-    // Prevenir solicitudes duplicadas
-    if (isRequesting) return;
-    setIsRequesting(true);
-
-    try {
-      const apiBaseUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
-      const response = await fetch(`${apiBaseUrl}/api/payment/confirm`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token_ws: token }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al confirmar el pago');
+  useEffect(() => {
+    const confirmPayment = async () => {
+      const token = searchParams.get('token_ws');
+  
+      if (!token) {
+        setStatus('error');
+        setPaymentDetails({ message: 'Token de transacción no encontrado.' });
+        return;
       }
-
-      const data = await response.json();
-
-      if (data.status === 'success') {
-        setStatus('success');
-        setPaymentDetails(data.response);
-        dispatch({ type: 'CLEAR_CART' });
-      } else {
-        throw new Error(data.message || 'Error en el pago');
+  
+      // Prevenir solicitudes duplicadas
+      if (isRequesting) {
+        console.warn('Solicitud duplicada detectada. Ignorando la solicitud.');
+        return;
       }
-    } catch (error: any) {
-      console.error('Error confirmando el pago:', error);
-      setStatus('error');
-      setPaymentDetails({ message: error.message || 'Error desconocido al procesar el pago.' });
-    } finally {
-      setIsRequesting(false);
-    }
-  };
-
-  confirmPayment();
-}, [searchParams, dispatch, isRequesting]);
+      setIsRequesting(true);
+  
+      try {
+        const apiBaseUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
+        const response = await fetch(`${apiBaseUrl}/api/payment/confirm`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token_ws: token }),
+        });
+  
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Error al confirmar el pago');
+        }
+  
+        const data = await response.json();
+  
+        if (data.status === 'success') {
+          setStatus('success');
+          setPaymentDetails(data.response);
+          dispatch({ type: 'CLEAR_CART' });
+        } else {
+          throw new Error(data.message || 'Error en el pago');
+        }
+      } catch (error: any) {
+        console.error('Error confirmando el pago:', error);
+        setStatus('error');
+        setPaymentDetails({ message: error.message || 'Error desconocido al procesar el pago.' });
+      } finally {
+        setIsRequesting(false);
+      }
+    };
+  
+    confirmPayment();
+  }, [searchParams, dispatch, isRequesting]);
+  
   
 
   const getPaymentTypeLabel = (code: string | undefined) => {
