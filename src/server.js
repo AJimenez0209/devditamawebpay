@@ -45,8 +45,8 @@ if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'integraci
 
 // Manejador de errores global
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something went wrong!');
+  console.error('Error en el servidor:', err);
+  res.status(500).json({ message: 'Error interno del servidor.' });
 });
 
 // Configuración del puerto y arranque del servidor
