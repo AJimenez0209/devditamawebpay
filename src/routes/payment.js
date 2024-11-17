@@ -47,6 +47,30 @@ router.post('/create', async (req, res) => {
   }
 });
 
+router.post('/status', async (req, res) => {
+  const { token_ws } = req.body;
+
+  if (!token_ws) {
+    return res.status(400).json({ message: 'Token de transacción faltante' });
+  }
+
+  try {
+    const statusResponse = await webpayPlus.status(token_ws);
+    res.json({
+      status: 'success',
+      response: statusResponse,
+    });
+  } catch (error) {
+    console.error('Error consultando el estado del token:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Error al consultar el estado del token.',
+      error: error.message,
+    });
+  }
+});
+
+
 // Ruta para confirmar transacciones
 router.post('/confirm', async (req, res) => {
   const { token_ws } = req.body;
