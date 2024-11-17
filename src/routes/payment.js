@@ -41,21 +41,29 @@ router.post('/confirm', async (req, res) => {
     return res.status(400).json({ message: 'Token de transacción faltante' });
   }
 
+  // Rechaza solicitudes duplicadas si ya está en proceso
   if (activeTokens.has(token_ws)) {
-    return res.status(409).json({ message: 'La transacción ya está siendo procesada.' });
+    console.log(`Token ${token_ws} ya está en proceso.`);
+    return res.json({ status: 'in-progress', message: 'La transacción ya está siendo procesada.' });
   }
 
+  // Marca el token como en proceso
   activeTokens.set(token_ws, true);
 
   try {
     const response = await webpayPlus.commit(token_ws);
 
     if (response.response_code === 0 && response.status === 'AUTHORIZED') {
-      // Libera el token inmediatamente después de procesar la transacción
+      console.log('Transacción confirmada con éxito:', response);
+
+      // Libera el token inmediatamente después del éxito
       activeTokens.delete(token_ws);
       return res.json({ status: 'success', response });
     } else {
-      activeTokens.delete(token_ws); // Libera el token en caso de error
+      console.error('Error en la transacción:', response);
+
+      // Libera el token en caso de error
+      activeTokens.delete(token_ws);
       return res.status(400).json({
         status: 'error',
         message: 'La transacción no fue autorizada.',
@@ -63,20 +71,18 @@ router.post('/confirm', async (req, res) => {
       });
     }
   } catch (error) {
-    activeTokens.delete(token_ws); // Libera el token en caso de excepción
+    console.error('Error confirmando la transacción:', error);
+
+    // Libera el token en caso de excepción
+    activeTokens.delete(token_ws);
     return res.status(500).json({
       status: 'error',
       message: 'Error al confirmar la transacción.',
       error: error.message,
     });
-  } finally {
-    // Libera el token después de 3 segundos para evitar bloqueos innecesarios
-    setTimeout(() => {
-      console.log(`Liberando token: ${token_ws}`);
-      activeTokens.delete(token_ws);
-    }, 3000);
   }
 });
+
 
 
 module.exports = router;
