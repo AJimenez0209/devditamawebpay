@@ -34,20 +34,16 @@ export const PaymentResult: React.FC = () => {
   useEffect(() => {
     const confirmPayment = async () => {
       const token = searchParams.get('token_ws');
-  
+    
       if (!token) {
         setStatus('error');
         setPaymentDetails({ message: 'Token de transacción no encontrado.' });
         return;
       }
-  
-      // Prevenir solicitudes duplicadas
-      if (isRequesting) {
-        console.warn('Solicitud duplicada detectada. Ignorando la solicitud.');
-        return;
-      }
+    
+      if (isRequesting) return; // Evita llamadas repetitivas
       setIsRequesting(true);
-  
+    
       try {
         const apiBaseUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
         const response = await fetch(`${apiBaseUrl}/api/payment/confirm`, {
@@ -57,14 +53,14 @@ export const PaymentResult: React.FC = () => {
           },
           body: JSON.stringify({ token_ws: token }),
         });
-  
+    
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.message || 'Error al confirmar el pago');
         }
-  
+    
         const data = await response.json();
-  
+    
         if (data.status === 'success') {
           setStatus('success');
           setPaymentDetails(data.response);
@@ -83,6 +79,7 @@ export const PaymentResult: React.FC = () => {
   
     confirmPayment();
   }, [searchParams, dispatch, isRequesting]);
+     
   
   
 

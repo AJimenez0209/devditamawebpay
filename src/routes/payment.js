@@ -41,37 +41,32 @@ router.post('/confirm', async (req, res) => {
     return res.status(400).json({ message: 'Token de transacción faltante' });
   }
 
-  // Verifica si el token ya está en proceso para evitar duplicados
   if (activeTokens.has(token_ws)) {
-    console.log(`Token ${token_ws} ya está en proceso.`);
     return res.status(409).json({ message: 'La transacción ya está siendo procesada.' });
   }
 
-  // Marca el token como en proceso
   activeTokens.set(token_ws, true);
 
   try {
-    // Confirma la transacción con Webpay Plus
     const response = await webpayPlus.commit(token_ws);
 
-    // Verifica si la transacción fue autorizada
     if (response.response_code === 0 && response.status === 'AUTHORIZED') {
-      console.log('Transacción confirmada con éxito:', response);
-
+      // Libera el token inmediatamente después de procesar la transacción
+      activeTokens.delete(token_ws);
       return res.json({ status: 'success', response });
     } else {
-      console.error('Error en la transacción:', response);
+      activeTokens.delete(token_ws); // Libera el token en caso de error
       return res.status(400).json({
         status: 'error',
-        message: 'La transacción no fue autorizada',
+        message: 'La transacción no fue autorizada.',
         response,
       });
     }
   } catch (error) {
-    console.error('Error confirmando la transacción:', error);
+    activeTokens.delete(token_ws); // Libera el token en caso de excepción
     return res.status(500).json({
       status: 'error',
-      message: 'Error al confirmar la transacción',
+      message: 'Error al confirmar la transacción.',
       error: error.message,
     });
   } finally {
