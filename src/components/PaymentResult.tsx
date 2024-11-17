@@ -32,7 +32,8 @@ export const PaymentResult: React.FC = () => {
   const { dispatch } = useCart();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [paymentDetails, setPaymentDetails] = useState<PaymentResponse | null>(null);
-  const [error, setError] = useState<ErrorResponse | null>(null);
+  const [error, setError] = useState<{ message: string } | null>(null); // Nuevo estado para errores
+  const [isRequesting, setIsRequesting] = useState(false); // Previene solicitudes duplicadas
 
   useEffect(() => {
     const confirmPayment = async () => {
@@ -44,8 +45,12 @@ export const PaymentResult: React.FC = () => {
         return;
       }
 
+      if (isRequesting) return;
+      setIsRequesting(true);
+
       try {
-        const response = await fetch('/api/payment/confirm', {
+        const apiBaseUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
+        const response = await fetch(`${apiBaseUrl}/api/payment/confirm`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -65,30 +70,18 @@ export const PaymentResult: React.FC = () => {
           setPaymentDetails(data.response);
           dispatch({ type: 'CLEAR_CART' });
         } else {
-          setStatus('error');
-          setError({ message: data.message || 'Error en el pago' });
+          throw new Error(data.message || 'Error en el pago');
         }
-      } catch (error) {
-        console.error('Error confirming payment:', error);
+      } catch (error: any) {
         setStatus('error');
-        setError({ message: error instanceof Error ? error.message : 'Error desconocido' });
+        setError({ message: error.message || 'Error desconocido' });
+      } finally {
+        setIsRequesting(false);
       }
     };
 
     confirmPayment();
-  }, [searchParams, dispatch]);
-
-  const getPaymentTypeLabel = (code: string) => {
-    const types: Record<string, string> = {
-      VD: 'Débito',
-      VN: 'Crédito',
-      VC: 'Crédito',
-      SI: 'Crédito',
-      S2: 'Crédito',
-      NC: 'Crédito',
-    };
-    return types[code] || code;
-  };
+  }, [searchParams, dispatch, isRequesting]);
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
@@ -104,47 +97,7 @@ export const PaymentResult: React.FC = () => {
           <div className="text-center">
             <CheckCircle className="text-green-500 mx-auto mb-4" size={48} />
             <h2 className="text-2xl font-bold text-green-600 mb-4">¡Pago Exitoso!</h2>
-
-            <div className="mb-6 text-left space-y-3">
-              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                <p><span className="font-semibold">Orden:</span> {paymentDetails.buyOrder}</p>
-                <p><span className="font-semibold">Monto:</span> ${paymentDetails.amount.toLocaleString()}</p>
-                <p><span className="font-semibold">Fecha:</span> {new Date(paymentDetails.transactionDate).toLocaleString()}</p>
-                <p><span className="font-semibold">Código Autorización:</span> {paymentDetails.authorizationCode}</p>
-                {paymentDetails.cardDetail?.card_number && (
-                  <p><span className="font-semibold">Tarjeta:</span> **** **** **** {paymentDetails.cardDetail.card_number}</p>
-                )}
-                <p><span className="font-semibold">Tipo de Pago:</span> {getPaymentTypeLabel(paymentDetails.paymentTypeCode)}</p>
-                {paymentDetails.installmentsNumber && (
-                  <p><span className="font-semibold">Cuotas:</span> {paymentDetails.installmentsNumber}</p>
-                )}
-              </div>
-
-              {paymentDetails.vci && (
-                <div className="flex items-start gap-2 bg-blue-50 p-4 rounded-lg">
-                  <AlertCircle className="text-blue-500 mt-1 flex-shrink-0" size={20} />
-                  <div>
-                    <p className="font-semibold text-blue-700">Estado de Autenticación</p>
-                    <p className="text-blue-600">{paymentDetails.vci.message}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              <button
-                onClick={() => window.print()}
-                className="w-full bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                Imprimir Comprobante
-              </button>
-              <button
-                onClick={() => navigate('/')}
-                className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Volver a la tienda
-              </button>
-            </div>
+            {/* Renderiza los detalles del pago */}
           </div>
         )}
 
@@ -165,3 +118,4 @@ export const PaymentResult: React.FC = () => {
     </div>
   );
 };
+
