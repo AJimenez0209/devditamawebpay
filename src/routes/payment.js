@@ -17,13 +17,20 @@ const webpayPlus = new WebpayPlus.Transaction({
 const activeTokens = new Map();
 
 const redis = require('redis');
+
 const client = redis.createClient({
-  url: process.env.REDIS_URL, // Heroku te proporcionará esta URL al configurar Redis
+  url: process.env.REDIS_URL,
+  socket: {
+    tls: true, // Activar conexión TLS
+    rejectUnauthorized: false, // Permitir certificados autofirmados
+  },
 });
 
 client.connect();
 
-client.on('error', (err) => console.error('Redis Client Error', err));
+client.on('error', (err) => {
+  console.error('Redis Client Error', err);
+});
 
 module.exports = client;
 
