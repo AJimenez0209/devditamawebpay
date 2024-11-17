@@ -16,23 +16,57 @@ const webpayPlus = new WebpayPlus.Transaction({
 // Mapa para manejar el bloqueo temporal de tokens
 const activeTokens = new Map();
 
-router.post('/create', async (req, res) => {
-  try {
-    const { orderId, sessionId, amount } = req.body;
+const redis = require('redis');
+const client = redis.createClient({
+  url: process.env.REDIS_URL, // Heroku te proporcionará esta URL al configurar Redis
+});
 
-    if (!orderId || !sessionId || !amount || isNaN(amount) || amount <= 0) {
-      return res.status(400).json({ message: 'Parámetros de transacción faltantes o incorrectos' });
+client.connect();
+
+client.on('error', (err) => console.error('Redis Client Error', err));
+
+module.exports = client;
+
+
+router.post('/confirm', async (req, res) => {
+  const { token_ws } = req.body;
+
+  if (!token_ws) {
+    return res.status(400).json({ message: 'Token de transacción faltante' });
+  }
+
+  try {
+    // Verifica si el token ya está siendo procesado
+    const isProcessing = await client.get(token_ws);
+
+    if (isProcessing) {
+      console.log(`Token ${token_ws} ya está en proceso.`);
+      return res.status(409).json({ message: 'La transacción ya está siendo procesada.' });
     }
 
-    const returnUrl = `${process.env.FRONTEND_URL}/payment/result`.replace(/([^:]\/)\/+/g, '$1');
-    const response = await webpayPlus.create(orderId.toString(), sessionId.toString(), amount, returnUrl);
+    // Marca el token como en proceso (expira en 5 minutos)
+    await client.set(token_ws, 'processing', { EX: 300 });
 
-    res.json({ status: 'success', response });
+    const response = await webpayPlus.commit(token_ws);
+
+    if (response.status === 'AUTHORIZED' && response.response_code === 0) {
+      console.log('Transacción confirmada con éxito:', response);
+
+      res.json({ status: 'success', response });
+    } else {
+      console.error('Error en la transacción:', response);
+      res.status(400).json({ status: 'error', message: 'La transacción no fue autorizada', response });
+    }
   } catch (error) {
-    console.error('Error creando la transacción:', error);
-    res.status(500).json({ message: 'Error al crear la transacción', error: error.message });
+    console.error('Error confirmando la transacción:', error);
+    res.status(500).json({ message: 'Error al confirmar el pago', error: error.message });
+  } finally {
+    // Elimina el token del almacenamiento después de confirmar
+    await client.del(token_ws);
   }
 });
+
+
 
 router.post('/confirm', async (req, res) => {
   const { token_ws } = req.body;
