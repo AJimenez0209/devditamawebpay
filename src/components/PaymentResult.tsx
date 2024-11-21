@@ -4,26 +4,22 @@ import { CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 interface PaymentResponse {
-  vci: {
+  vci?: {
     code: string;
     message: string;
   };
-  amount: number;
-  status: string;
-  buyOrder: string;
-  sessionId: string;
+  amount?: number;
+  status?: string;
+  buyOrder?: string;
+  sessionId?: string;
   cardDetail?: {
     card_number: string;
   };
-  transactionDate: string;
-  authorizationCode: string;
-  paymentTypeCode: string;
-  responseCode: number;
+  transactionDate?: string;
+  authorizationCode?: string;
+  paymentTypeCode?: string;
+  responseCode?: number;
   installmentsNumber?: number;
-}
-
-interface ErrorResponse {
-  message: string;
 }
 
 export const PaymentResult: React.FC = () => {
@@ -32,7 +28,7 @@ export const PaymentResult: React.FC = () => {
   const { dispatch } = useCart();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [paymentDetails, setPaymentDetails] = useState<PaymentResponse | null>(null);
-  const [error, setError] = useState<{ message: string } | null>(null); // Nuevo estado para errores
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isRequesting, setIsRequesting] = useState(false); // Previene solicitudes duplicadas
 
   useEffect(() => {
@@ -41,11 +37,17 @@ export const PaymentResult: React.FC = () => {
 
       if (!token) {
         setStatus('error');
-        setError({ message: 'Token de transacción no encontrado.' });
+        setErrorMessage('Token de transacción no encontrado.');
         return;
       }
 
-      if (isRequesting) return;
+      // Revisa si el token ya fue procesado en sessionStorage
+      if (sessionStorage.getItem(`processed_${token}`)) {
+        console.log(`Token ${token} ya fue procesado.`);
+        return;
+      }
+
+      if (isRequesting) return; // Evita solicitudes repetidas
       setIsRequesting(true);
 
       try {
@@ -68,15 +70,16 @@ export const PaymentResult: React.FC = () => {
         if (data.status === 'success') {
           setStatus('success');
           setPaymentDetails(data.response);
+          sessionStorage.setItem(`processed_${token}`, 'true'); // Marca el token como procesado
           dispatch({ type: 'CLEAR_CART' });
         } else {
           throw new Error(data.message || 'Error en el pago');
         }
       } catch (error: any) {
         setStatus('error');
-        setError({ message: error.message || 'Error desconocido' });
+        setErrorMessage(error.message || 'Error desconocido al procesar el pago.');
       } finally {
-        setIsRequesting(false);
+        setTimeout(() => setIsRequesting(false), 5000); // Asegura un tiempo de espera antes de liberar
       }
     };
 
@@ -97,15 +100,34 @@ export const PaymentResult: React.FC = () => {
           <div className="text-center">
             <CheckCircle className="text-green-500 mx-auto mb-4" size={48} />
             <h2 className="text-2xl font-bold text-green-600 mb-4">¡Pago Exitoso!</h2>
-            {/* Renderiza los detalles del pago */}
+
+            <div className="mb-6 text-left space-y-3">
+              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                <p><span className="font-semibold">Orden:</span> {paymentDetails.buyOrder || 'No disponible'}</p>
+                <p><span className="font-semibold">Monto:</span> ${paymentDetails.amount?.toLocaleString() || 'No disponible'}</p>
+                <p><span className="font-semibold">Fecha:</span> {new Date(paymentDetails.transactionDate || '').toLocaleString()}</p>
+                <p><span className="font-semibold">Código Autorización:</span> {paymentDetails.authorizationCode || 'No disponible'}</p>
+                {paymentDetails.cardDetail?.card_number && (
+                  <p><span className="font-semibold">Tarjeta:</span> **** **** **** {paymentDetails.cardDetail.card_number}</p>
+                )}
+                <p><span className="font-semibold">Tipo de Pago:</span> {paymentDetails.paymentTypeCode || 'Desconocido'}</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => navigate('/')}
+              className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Volver a la tienda
+            </button>
           </div>
         )}
 
-        {status === 'error' && error && (
+        {status === 'error' && errorMessage && (
           <div className="text-center">
             <XCircle className="text-red-500 mx-auto mb-4" size={48} />
             <h2 className="text-2xl font-bold text-red-600 mb-4">Error en el pago</h2>
-            <p className="mb-6">{error.message}</p>
+            <p className="mb-6">{errorMessage}</p>
             <button
               onClick={() => navigate('/')}
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -118,4 +140,3 @@ export const PaymentResult: React.FC = () => {
     </div>
   );
 };
-

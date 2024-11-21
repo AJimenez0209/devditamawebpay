@@ -77,41 +77,38 @@ router.post('/confirm', async (req, res) => {
 
   if (!token_ws) {
     return res.status(400).json({ message: 'Token de transacción faltante' });
-}
+  }
 
-try {
-    // Verifica si el token está en proceso
-    const isProcessing = await client.get(token_ws);
+  try {
+    // Intenta establecer el token como "en proceso" en Redis
+    const setProcessing = await client.set(token_ws, 'processing', {
+      NX: true, // Solo lo establece si no existe
+      EX: 300,  // Expira en 300 segundos
+    });
 
-    if (isProcessing) {
-        console.log(`Token ${token_ws} ya está en proceso.`);
-        return res.status(409).json({ message: 'La transacción ya está siendo procesada.' });
+    if (!setProcessing) {
+      console.log(`Token ${token_ws} ya está en proceso.`);
+      return res.status(409).json({ message: 'La transacción ya está siendo procesada.' });
     }
-
-    // Marca el token como en proceso
-    await client.set(token_ws, 'processing', { EX: 300 });
 
     // Realiza la confirmación con Webpay
     const response = await webpayPlus.commit(token_ws);
 
     if (response.status === 'AUTHORIZED' && response.response_code === 0) {
-        console.log('Transacción confirmada con éxito:', response);
-        res.json({ status: 'success', response });
+      console.log('Transacción confirmada con éxito:', response);
+      res.json({ status: 'success', response });
     } else {
-        console.error('Error en la transacción:', response);
-        res.status(400).json({ status: 'error', message: 'La transacción no fue autorizada', response });
+      console.error('Error en la transacción:', response);
+      res.status(400).json({ status: 'error', message: 'La transacción no fue autorizada', response });
     }
-} catch (error) {
+  } catch (error) {
     console.error('Error confirmando la transacción:', error);
-    if (error.message.includes('Transaction already locked')) {
-        return res.status(409).json({ message: 'La transacción ya está siendo procesada por otro proceso.' });
-    }
     res.status(500).json({ message: 'Error al confirmar el pago', error: error.message });
-} finally {
-    // Asegura que el token se desbloquee incluso en caso de error
+  } finally {
+    // Asegura que el token se elimine de Redis, incluso si ocurre un error
     await client.del(token_ws);
-}
-
+  }
 });
+
 
 module.exports = router;
