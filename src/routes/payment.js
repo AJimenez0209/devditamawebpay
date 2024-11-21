@@ -80,6 +80,14 @@ router.post('/confirm', async (req, res) => {
   }
 
   try {
+
+    // Verifica si el token ya fue confirmado
+    const tokenStatus = await client.get(token_ws);
+    if (tokenStatus === 'confirmed') {
+      console.log(`Token ${token_ws} ya fue confirmado.`);
+      return res.status(409).json({ message: 'La transacción ya fue confirmada.' });
+    }
+
     // Intenta establecer el token como "en proceso" en Redis
     const setProcessing = await client.set(token_ws, 'processing', {
       NX: true, // Solo lo establece si no existe
@@ -88,7 +96,7 @@ router.post('/confirm', async (req, res) => {
 
     if (!setProcessing) {
       console.log(`Token ${token_ws} ya está en proceso.`);
-      return res.status(409).json({ message: 'La transacción ya está siendo procesada.' });
+      return res.status(409).json({ message: 'La transacción ya está siendo procesada o fue confirmada.' });
     }
 
     // Realiza la confirmación con Webpay
@@ -96,19 +104,27 @@ router.post('/confirm', async (req, res) => {
 
     if (response.status === 'AUTHORIZED' && response.response_code === 0) {
       console.log('Transacción confirmada con éxito:', response);
+
+      // Marca el token como "confirmado" en Redis
+      await client.set(token_ws, 'confirmed', { EX: 3600 }); // Expira en 1 hora
       res.json({ status: 'success', response });
     } else {
       console.error('Error en la transacción:', response);
+
+      // Si falla la transacción, elimina el token de Redis
+      await client.del(token_ws);
       res.status(400).json({ status: 'error', message: 'La transacción no fue autorizada', response });
+      
     }
   } catch (error) {
     console.error('Error confirmando la transacción:', error);
-    res.status(500).json({ message: 'Error al confirmar el pago', error: error.message });
-  } finally {
-    // Asegura que el token se elimine de Redis, incluso si ocurre un error
+
+    // Elimina el token en caso de errores inesperados
     await client.del(token_ws);
+    res.status(500).json({ message: 'Error al confirmar el pago', error: error.message });
   }
 });
+
 
 
 module.exports = router;
