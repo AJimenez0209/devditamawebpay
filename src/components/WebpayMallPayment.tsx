@@ -33,10 +33,10 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          items,
-          orderId,
-          sessionId,
-          amount,
+          buyOrder: orderId, // Corresponde al ID de la orden principal
+          sessionId, // ID de sesión único
+          amount, // Total del monto
+          returnUrl: `${window.location.origin}/payment/result`, // URL de retorno
         }),
       });
 
