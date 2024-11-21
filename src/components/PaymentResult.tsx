@@ -15,6 +15,7 @@ interface PaymentResponse {
   cardDetail?: {
     card_number: string;
   };
+  
   transactionDate?: string;
   authorizationCode?: string;
   paymentTypeCode?: string;
