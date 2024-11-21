@@ -3,10 +3,10 @@ import { Loader2 } from 'lucide-react';
 import { WebpayRedirectForm } from './WebpayRedirectForm';
 
 interface WebpayMallPaymentProps {
-  orderId: string;
+  orderId: string; // ID de la orden principal
   items: Array<{
-    amount: number;
-    storeIndex: number;
+    amount: number; // Monto de cada item
+    storeIndex: number; // Índice de la tienda asociada al ítem
   }>;
 }
 
@@ -20,23 +20,29 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
       setLoading(true);
       setError(null);
 
+      // Validar que haya items antes de proceder
+      if (items.length === 0) {
+        throw new Error('No hay items para procesar el pago.');
+      }
+
       // Calcular el total del monto
       const amount = items.reduce((sum, item) => sum + item.amount, 0);
 
       // Generar un sessionId único
       const sessionId = `SESSION-${Date.now()}`;
 
-      // Enviar la solicitud al backend sin returnUrl
+      // Enviar la solicitud al backend
       const response = await fetch('/api/payment/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          items,
-          orderId,
-          sessionId,
-          amount,
+          buyOrder: orderId, // Corresponde al ID de la orden principal
+          sessionId, // ID de sesión único
+          amount, // Total del monto
+          items, // Lista de ítems en caso de Webpay Mall
+          returnUrl: `${window.location.origin}/payment/result`, // URL de retorno
         }),
       });
 
@@ -48,19 +54,20 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
       const data = await response.json();
 
       if (data.url && data.token) {
-        setPaymentData(data);
+        setPaymentData({ token: data.token, url: data.url });
       } else {
         throw new Error('Respuesta inválida del servidor');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error initiating payment:', error);
-      setError(error instanceof Error ? error.message : 'Error desconocido');
+      setError(error.message || 'Error desconocido');
     } finally {
       setLoading(false);
     }
   };
 
   if (paymentData) {
+    // Redirige a la URL proporcionada por Transbank
     return <WebpayRedirectForm token={paymentData.token} url={paymentData.url} />;
   }
 
