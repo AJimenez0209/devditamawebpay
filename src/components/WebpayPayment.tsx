@@ -41,9 +41,9 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
           buyOrder: orderId, // Corresponde al ID de la orden principal
           sessionId, // ID de sesión único
           amount, // Total del monto
-          items, // Lista de ítems en caso de Webpay Mall
           returnUrl: `${window.location.origin}/payment/result`, // URL de retorno
         }),
+        
       });
 
       if (!response.ok) {
