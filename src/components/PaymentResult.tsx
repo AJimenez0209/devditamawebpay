@@ -62,29 +62,27 @@ export const PaymentResult: React.FC = () => {
           },
           body: JSON.stringify({ token_ws: token }),
         });
-    
-        if (response.status === 409) {
-          console.log('La transacción ya fue confirmada.');
+
+        const data = await response.json();
+
+        if (response.status === 200 && data.status === 'success') {
+          console.log('Transacción confirmada con éxito.');
           setStatus('success');
+          setPaymentDetails(data.response || null);
+          sessionStorage.setItem(`processed_${token}`, 'true');
+          dispatch({ type: 'CLEAR_CART' });
+          return;
+        }
+
+        if (response.status === 409) {
+          console.log('La transacción ya fue confirmada previamente.');
+          setStatus('success');
+          setPaymentDetails(null); // Evita detalles redundantes
           sessionStorage.setItem(`processed_${token}`, 'true');
           return;
         }
-    
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Error al confirmar el pago');
-        }
-    
-        const data = await response.json();
-    
-        if (data.status === 'success') {
-          setStatus('success');
-          setPaymentDetails(data.response);
-          sessionStorage.setItem(`processed_${token}`, 'true'); // Marca el token como procesado
-          dispatch({ type: 'CLEAR_CART' });
-        } else {
-          throw new Error(data.message || 'Error en el pago');
-        }
+
+        throw new Error(data.message || 'Error al confirmar el pago');
       } catch (error: any) {
         setStatus('error');
         setErrorMessage(error.message || 'Error desconocido al procesar el pago.');
@@ -92,7 +90,6 @@ export const PaymentResult: React.FC = () => {
         setTimeout(() => setIsRequesting(false), 5000); // Asegura un tiempo de espera antes de liberar
       }
     };
-    
 
     confirmPayment();
   }, [searchParams, dispatch, isRequesting]);
@@ -107,24 +104,24 @@ export const PaymentResult: React.FC = () => {
           </div>
         )}
 
-        {status === 'success' && paymentDetails && (
+        {status === 'success' && (
           <div className="text-center">
             <CheckCircle className="text-green-500 mx-auto mb-4" size={48} />
             <h2 className="text-2xl font-bold text-green-600 mb-4">¡Pago Exitoso!</h2>
-
-            <div className="mb-6 text-left space-y-3">
-              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                <p><span className="font-semibold">Orden:</span> {paymentDetails.buyOrder || 'No disponible'}</p>
-                <p><span className="font-semibold">Monto:</span> ${paymentDetails.amount?.toLocaleString() || 'No disponible'}</p>
-                <p><span className="font-semibold">Fecha:</span> {new Date(paymentDetails.transactionDate || '').toLocaleString()}</p>
-                <p><span className="font-semibold">Código Autorización:</span> {paymentDetails.authorizationCode || 'No disponible'}</p>
-                {paymentDetails.cardDetail?.card_number && (
-                  <p><span className="font-semibold">Tarjeta:</span> **** **** **** {paymentDetails.cardDetail.card_number}</p>
-                )}
-                <p><span className="font-semibold">Tipo de Pago:</span> {paymentDetails.paymentTypeCode || 'Desconocido'}</p>
+            {paymentDetails && (
+              <div className="mb-6 text-left space-y-3">
+                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                  <p><span className="font-semibold">Orden:</span> {paymentDetails.buyOrder || 'No disponible'}</p>
+                  <p><span className="font-semibold">Monto:</span> ${paymentDetails.amount?.toLocaleString() || 'No disponible'}</p>
+                  <p><span className="font-semibold">Fecha:</span> {new Date(paymentDetails.transactionDate || '').toLocaleString()}</p>
+                  <p><span className="font-semibold">Código Autorización:</span> {paymentDetails.authorizationCode || 'No disponible'}</p>
+                  {paymentDetails.cardDetail?.card_number && (
+                    <p><span className="font-semibold">Tarjeta:</span> **** **** **** {paymentDetails.cardDetail.card_number}</p>
+                  )}
+                  <p><span className="font-semibold">Tipo de Pago:</span> {paymentDetails.paymentTypeCode || 'Desconocido'}</p>
+                </div>
               </div>
-            </div>
-
+            )}
             <button
               onClick={() => navigate('/')}
               className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
