@@ -55,14 +55,15 @@ export const Checkout: React.FC = () => {
   // Prepare items for Webpay Mall transaction
   const mallItems = state.items.map((item) => ({
     amount: Math.round(item.price * item.quantity),
-    storeIndex: 0, // All items go to store 1 in this example
+    storeIndex: 0,
   }));
 
   if (showVoucher) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="max-w-2xl mx-auto">
-          <div className="border-b pb-4 mb-4 flex items-center justify-between">
+          {/* Botón de impresión - solo visible en pantalla */}
+          <div className="print:hidden border-b pb-4 mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Receipt className="h-6 w-6 text-blue-600" />
               <h2 className="text-2xl font-bold">Voucher de Pago</h2>
@@ -75,15 +76,22 @@ export const Checkout: React.FC = () => {
             </button>
           </div>
 
+          {/* Contenido del voucher */}
           <div className="space-y-4">
+            {/* Encabezado del voucher para impresión */}
+            <div className="hidden print:block text-center mb-8">
+              <h1 className="text-2xl font-bold">BabyDiapers</h1>
+              <p className="text-sm text-gray-600">Voucher de Pago</p>
+            </div>
+
             <div className="flex justify-between text-sm text-gray-600">
               <span>Fecha: {currentDate}</span>
               <span>Orden: {orderNumber}</span>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+            <div className="bg-gray-50 print:bg-white p-4 rounded-lg space-y-2">
               <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-gray-600" />
+                <MapPin className="h-5 w-5 text-gray-600 print:hidden" />
                 <div>
                   <p className="font-medium">Dirección de retiro:</p>
                   <p className="text-gray-600">{storeAddress}</p>
@@ -96,7 +104,7 @@ export const Checkout: React.FC = () => {
               {state.items.map((item) => (
                 <div key={item.id} className="flex justify-between items-center border-b pb-2">
                   <div className="flex items-center gap-4">
-                    <Package2 className="h-5 w-5 text-gray-600" />
+                    <Package2 className="h-5 w-5 text-gray-600 print:hidden" />
                     <div>
                       <p className="font-medium">{item.name}</p>
                       <p className="text-sm text-gray-600">
@@ -123,12 +131,13 @@ export const Checkout: React.FC = () => {
               <p>Válido por 24 horas</p>
             </div>
 
+            {/* Botón Finalizar - solo visible en pantalla */}
             <button
               onClick={() => {
                 dispatch({ type: 'CLEAR_CART' });
                 setShowVoucher(false);
               }}
-              className="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
+              className="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors print:hidden"
             >
               Finalizar
             </button>
