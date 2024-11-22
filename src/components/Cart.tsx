@@ -1,6 +1,7 @@
 import React from 'react';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { formatCLP } from '../utils/currency';
 
 export const Cart: React.FC = () => {
   const { state, dispatch } = useCart();
@@ -23,7 +24,7 @@ export const Cart: React.FC = () => {
                   />
                   <div>
                     <h3 className="font-semibold">{item.name}</h3>
-                    <p className="text-gray-600 text-sm">${item.price.toFixed(2)}</p>
+                    <p className="text-gray-600 text-sm">{formatCLP(item.price)}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
@@ -65,7 +66,7 @@ export const Cart: React.FC = () => {
           <div className="mt-6">
             <div className="flex justify-between text-xl font-bold">
               <span>Total:</span>
-              <span>${state.total.toFixed(2)}</span>
+              <span>{formatCLP(state.total)}</span>
             </div>
           </div>
         </>
