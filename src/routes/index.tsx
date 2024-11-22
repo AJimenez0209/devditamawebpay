@@ -1,6 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import App from '../App';
-import { PaymentResult } from '../components/MallPaymentResult';
+import { PaymentResult } from '../components/PaymentResult';
 import WebpayRedirectPage from '../components/WebpayRedirectPage';
 import { CartProvider } from '../context/CartContext'; // Importa el CartProvider
 
