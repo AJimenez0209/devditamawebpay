@@ -56,7 +56,9 @@ export const PaymentResult: React.FC = () => {
   
       if (!token) {
         setStatus('error');
-        setErrorMessage('Token de transacción no encontrado.');
+        setErrorMessage(
+          'No pudimos procesar tu transacción. Esto puede suceder si cancelaste la compra o hubo un problema en el proceso. Por favor, intenta nuevamente o contacta a nuestro soporte.'
+        );
         return;
       }
   
