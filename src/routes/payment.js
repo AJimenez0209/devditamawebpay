@@ -86,9 +86,10 @@ router.post('/confirm', async (req, res) => {
 
     if (tokenStatus === 'confirmed') {
       console.log(`Token ${token_ws} ya fue confirmado.`);
+      const confirmedDetails = await client.get(`details_${token_ws}`);
       return res.status(200).json({
         status: 'success',
-        message: 'La transacción ya fue confirmada previamente.',
+        response: JSON.parse(confirmedDetails), // Devuelve detalles si los tienes en Redis
       });
     }
 
@@ -108,10 +109,13 @@ router.post('/confirm', async (req, res) => {
 
     if (response.status === 'AUTHORIZED' && response.response_code === 0) {
       console.log('Transacción confirmada con éxito:', response);
-
-      // Marca el token como "confirmado" en Redis
-      await client.set(token_ws, 'confirmed', { EX: 3600 }); // Expira en 1 hora
+    
+      // Guarda el estado confirmado junto con los detalles
+      await client.set(token_ws, 'confirmed', { EX: 3600 });
+      await client.set(`details_${token_ws}`, JSON.stringify(response), { EX: 3600 });
+    
       return res.json({ status: 'success', response });
+    
     } else {
       console.error('Error en la transacción:', response);
 
