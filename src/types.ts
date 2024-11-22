@@ -7,6 +7,7 @@ export interface Product {
   size: string;
   quantity: number;
   unitsPerPack: number;
+  formattedPrice: string;
 }
 
 export interface CartItem extends Product {

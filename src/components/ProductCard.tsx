@@ -2,6 +2,7 @@ import React from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
+import { formatCLP } from '../utils/currency';
 
 interface ProductCardProps {
   product: Product;
@@ -23,19 +24,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <div className="mt-2 text-sm text-gray-600">
           <p>Tamaño: {product.size}</p>
           <p>{product.unitsPerPack} unidades por paquete</p>
+          <p className="text-lg font-bold text-blue-600 mt-2">
+            {formatCLP(product.price)}
+          </p>
         </div>
-        <div className="mt-4 flex items-center justify-between">
-          <span className="text-xl font-bold text-gray-900">
-            ${product.price.toFixed(2)}
-          </span>
-          <button
-            onClick={() => dispatch({ type: 'ADD_ITEM', payload: product })}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <ShoppingCart size={20} />
-            Agregar
-          </button>
-        </div>
+        <button
+          onClick={() => dispatch({ type: 'ADD_ITEM', payload: product })}
+          className="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+        >
+          <ShoppingCart size={20} />
+          Agregar al carrito
+        </button>
       </div>
     </div>
   );
