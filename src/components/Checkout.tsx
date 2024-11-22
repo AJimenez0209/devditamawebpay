@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { PaymentMethod, DeliveryMethod, OrderDetails } from '../types';
 import { WebpayMallPayment } from './WebpayMallPayment';
+import { formatCLP } from '../utils/currency';
 
 export const Checkout: React.FC = () => {
   const { state, dispatch } = useCart();
@@ -133,7 +134,7 @@ export const Checkout: React.FC = () => {
         <div className="border-t pt-4">
           <div className="flex justify-between text-xl font-bold mb-4">
             <span>Total:</span>
-            <span>${state.total.toFixed(2)}</span>
+            <span>{formatCLP(state.total)}</span>
           </div>
           {orderId && paymentMethod === 'card' ? (
             <WebpayMallPayment orderId={orderId} items={mallItems} />
