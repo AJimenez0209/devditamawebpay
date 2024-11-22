@@ -35,21 +35,17 @@ export const PaymentResult: React.FC = () => {
   useEffect(() => {
     const confirmPayment = async () => {
       const token = searchParams.get('token_ws');
-  
       if (!token) {
         setStatus('error');
         setErrorMessage('Token de transacción no encontrado.');
         return;
       }
   
-      // Revisar si ya está en sessionStorage
       if (sessionStorage.getItem(`processed_${token}`)) {
         console.log(`Token ${token} ya fue procesado.`);
         setStatus('success');
         return;
       }
-  
-      if (isRequesting) return;
   
       setIsRequesting(true);
   
@@ -57,14 +53,12 @@ export const PaymentResult: React.FC = () => {
         const apiBaseUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
         const response = await fetch(`${apiBaseUrl}/api/payment/confirm`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token_ws: token }),
         });
   
         if (response.status === 409) {
-          console.log('Token ya fue confirmado.');
+          console.log('La transacción ya está siendo procesada.');
           setStatus('success');
           sessionStorage.setItem(`processed_${token}`, 'true');
           return;
@@ -76,25 +70,26 @@ export const PaymentResult: React.FC = () => {
         }
   
         const data = await response.json();
-  
         if (data.status === 'success') {
           setStatus('success');
           setPaymentDetails(data.response);
           sessionStorage.setItem(`processed_${token}`, 'true');
-          dispatch({ type: 'CLEAR_CART' });
         } else {
           throw new Error(data.message || 'Error en el pago');
         }
       } catch (error: any) {
-        setStatus('error');
-        setErrorMessage(error.message || 'Error desconocido al procesar el pago.');
+        if (!paymentDetails) {
+          setStatus('error');
+          setErrorMessage(error.message || 'Error desconocido.');
+        }
       } finally {
-        setTimeout(() => setIsRequesting(false), 5000);
+        setIsRequesting(false);
       }
     };
   
     confirmPayment();
   }, [searchParams, dispatch, isRequesting]);
+  
   
 
   return (
