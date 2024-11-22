@@ -4,6 +4,7 @@ import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatCLP } from '../utils/currency';
 
+
 interface PaymentResponse {
   vci?: {
     code: string;
