@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle, XCircle, Loader2} from 'lucide-react';
+import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { formatCLP } from '../utils/currency';
 
 interface PaymentResponse {
   vci?: {
@@ -15,7 +16,6 @@ interface PaymentResponse {
   cardDetail?: {
     card_number: string;
   };
-  
   transactionDate?: string;
   authorizationCode?: string;
   paymentTypeCode?: string;
@@ -24,14 +24,30 @@ interface PaymentResponse {
   message?: string;
 }
 
+const getPaymentTypeLabel = (code: string | undefined): string => {
+  if (!code) return 'Desconocido';
+  
+  const types: Record<string, string> = {
+    VD: 'Débito',
+    VN: 'Crédito',
+    VC: 'Crédito',
+    SI: '3 cuotas sin interés',
+    S2: '2 cuotas sin interés',
+    NC: 'N cuotas sin interés',
+    VP: 'Prepago'
+  };
+  
+  return types[code] || code;
+};
+
 export const PaymentResult: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { dispatch } = useCart();
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'| 'processing'>('loading');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'processing'>('loading');
   const [paymentDetails, setPaymentDetails] = useState<PaymentResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isRequesting, setIsRequesting] = useState(false); // Previene duplicados
+  const [isRequesting, setIsRequesting] = useState(false);
 
   useEffect(() => {
     const confirmPayment = async () => {
@@ -73,7 +89,7 @@ export const PaymentResult: React.FC = () => {
         } else {
           throw new Error(data.message || 'Error al confirmar el pago.');
         }
-      } catch (error:any) {
+      } catch (error: any) {
         console.error('Error confirmando el pago:', error);
         setStatus('error');
         setErrorMessage(error.message || 'Error desconocido.');
@@ -82,9 +98,14 @@ export const PaymentResult: React.FC = () => {
   
     confirmPayment();
   }, [searchParams, dispatch]);
-  
-  
- 
+
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) return 'No disponible';
+    return new Date(dateString).toLocaleString('es-CL', {
+      dateStyle: 'long',
+      timeStyle: 'short'
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
@@ -96,6 +117,14 @@ export const PaymentResult: React.FC = () => {
           </div>
         )}
 
+        {status === 'processing' && (
+          <div className="text-center">
+            <Loader2 className="animate-spin mx-auto mb-4" size={48} />
+            <p className="text-lg">La transacción está siendo procesada...</p>
+            <p className="text-sm text-gray-600 mt-2">Por favor, espere un momento.</p>
+          </div>
+        )}
+
         {status === 'success' && (
           <div className="text-center">
             <CheckCircle className="text-green-500 mx-auto mb-4" size={48} />
@@ -104,22 +133,34 @@ export const PaymentResult: React.FC = () => {
               <div className="mb-6 text-left space-y-3">
                 <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                   <p><span className="font-semibold">Orden:</span> {paymentDetails.buyOrder || 'No disponible'}</p>
-                  <p><span className="font-semibold">Monto:</span> ${paymentDetails.amount?.toLocaleString() || 'No disponible'}</p>
-                  <p><span className="font-semibold">Fecha:</span> {new Date(paymentDetails.transactionDate || '').toLocaleString()}</p>
+                  <p><span className="font-semibold">Monto:</span> {paymentDetails.amount ? formatCLP(paymentDetails.amount) : 'No disponible'}</p>
+                  <p><span className="font-semibold">Fecha:</span> {formatDate(paymentDetails.transactionDate)}</p>
                   <p><span className="font-semibold">Código Autorización:</span> {paymentDetails.authorizationCode || 'No disponible'}</p>
                   {paymentDetails.cardDetail?.card_number && (
                     <p><span className="font-semibold">Tarjeta:</span> **** **** **** {paymentDetails.cardDetail.card_number}</p>
                   )}
-                  <p><span className="font-semibold">Tipo de Pago:</span> {paymentDetails.paymentTypeCode || 'Desconocido'}</p>
+                  <p><span className="font-semibold">Tipo de Pago:</span> {getPaymentTypeLabel(paymentDetails.paymentTypeCode)}</p>
+                  {paymentDetails.installmentsNumber && (
+                    <p><span className="font-semibold">Cuotas:</span> {paymentDetails.installmentsNumber}</p>
+                  )}
+                </div>
+
+                <div className="mt-6 space-y-4">
+                  <button
+                    onClick={() => window.print()}
+                    className="w-full bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    Imprimir Comprobante
+                  </button>
+                  <button
+                    onClick={() => navigate('/')}
+                    className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Volver a la tienda
+                  </button>
                 </div>
               </div>
             )}
-            <button
-              onClick={() => navigate('/')}
-              className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Volver a la tienda
-            </button>
           </div>
         )}
 
