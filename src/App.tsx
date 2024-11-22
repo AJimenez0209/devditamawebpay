@@ -4,37 +4,41 @@ import { CartProvider } from './context/CartContext';
 import { ProductCard } from './components/ProductCard';
 import { Cart } from './components/Cart';
 import { Checkout } from './components/Checkout';
+import { formatCLP } from './utils/currency';
 
 const products = [
   {
     id: '1',
     name: 'Pañales Premium Recién Nacido',
-    price: 15.99,
+    price: 15990,
     image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=600',
     description: 'Pañales ultra suaves para recién nacidos',
     size: 'RN',
     quantity: 36,
-    unitsPerPack: 36
+    unitsPerPack: 36,
+    formattedPrice: formatCLP(15990)
   },
   {
     id: '2',
     name: 'Pañales Súper Absorbentes',
-    price: 19.99,
+    price: 19990,
     image: 'https://images.unsplash.com/photo-1606791422814-b32c705e3e2f?auto=format&fit=crop&q=80&w=600',
     description: 'Máxima protección día y noche',
     size: 'M',
     quantity: 48,
-    unitsPerPack: 48
+    unitsPerPack: 48,
+    formattedPrice: formatCLP(19990)
   },
   {
     id: '3',
     name: 'Pañales Ecológicos',
-    price: 22.99,
+    price: 22990,
     image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&q=80&w=600',
     description: 'Amigables con el medio ambiente',
     size: 'G',
     quantity: 40,
-    unitsPerPack: 40
+    unitsPerPack: 40,
+    formattedPrice: formatCLP(22990)
   }
 ];
 
