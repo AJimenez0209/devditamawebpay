@@ -41,12 +41,14 @@ export const PaymentResult: React.FC = () => {
         return;
       }
   
+      // Evita reintentos si el token ya fue procesado
       if (sessionStorage.getItem(`processed_${token}`)) {
         console.log(`Token ${token} ya fue procesado.`);
         setStatus('success');
         return;
       }
   
+      if (isRequesting) return; // Evita múltiples solicitudes simultáneas
       setIsRequesting(true);
   
       try {
@@ -57,31 +59,33 @@ export const PaymentResult: React.FC = () => {
           body: JSON.stringify({ token_ws: token }),
         });
   
+        // Manejo del estado 409 (en proceso)
         if (response.status === 409) {
-          console.log('La transacción ya está siendo procesada.');
-          setStatus('success');
-          sessionStorage.setItem(`processed_${token}`, 'true');
+          console.log('La transacción está en proceso. Intenta nuevamente.');
+          setStatus('loading');
           return;
         }
   
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Error al confirmar el pago');
+        // Manejo del estado 200 (éxito)
+        if (response.status === 200) {
+          const data = await response.json();
+          if (data.status === 'success') {
+            setStatus('success');
+            setPaymentDetails(data.response);
+            sessionStorage.setItem(`processed_${token}`, 'true'); // Marca como procesado
+            dispatch({ type: 'CLEAR_CART' });
+          } else {
+            throw new Error(data.message || 'Error en la confirmación del pago.');
+          }
+          return;
         }
   
-        const data = await response.json();
-        if (data.status === 'success') {
-          setStatus('success');
-          setPaymentDetails(data.response);
-          sessionStorage.setItem(`processed_${token}`, 'true');
-        } else {
-          throw new Error(data.message || 'Error en el pago');
-        }
+        // Manejo de otros errores
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al confirmar el pago');
       } catch (error: any) {
-        if (!paymentDetails) {
-          setStatus('error');
-          setErrorMessage(error.message || 'Error desconocido.');
-        }
+        setStatus('error');
+        setErrorMessage(error.message || 'Error desconocido al procesar el pago.');
       } finally {
         setIsRequesting(false);
       }
@@ -89,8 +93,7 @@ export const PaymentResult: React.FC = () => {
   
     confirmPayment();
   }, [searchParams, dispatch, isRequesting]);
-  
-  
+ 
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
