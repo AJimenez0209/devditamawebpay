@@ -35,22 +35,24 @@ export const PaymentResult: React.FC = () => {
   useEffect(() => {
     const confirmPayment = async () => {
       const token = searchParams.get('token_ws');
-
+    
       if (!token) {
         setStatus('error');
         setErrorMessage('Token de transacción no encontrado.');
         return;
       }
-
+    
       // Revisa si el token ya fue procesado en sessionStorage
       if (sessionStorage.getItem(`processed_${token}`)) {
         console.log(`Token ${token} ya fue procesado.`);
+        setStatus('success');
+        setPaymentDetails(null); // Evita mostrar detalles redundantes
         return;
       }
-
+    
       if (isRequesting) return; // Evita solicitudes repetidas
       setIsRequesting(true);
-
+    
       try {
         const apiBaseUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
         const response = await fetch(`${apiBaseUrl}/api/payment/confirm`, {
@@ -60,14 +62,21 @@ export const PaymentResult: React.FC = () => {
           },
           body: JSON.stringify({ token_ws: token }),
         });
-
+    
+        if (response.status === 409) {
+          console.log('La transacción ya fue confirmada.');
+          setStatus('success');
+          sessionStorage.setItem(`processed_${token}`, 'true');
+          return;
+        }
+    
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.message || 'Error al confirmar el pago');
         }
-
+    
         const data = await response.json();
-
+    
         if (data.status === 'success') {
           setStatus('success');
           setPaymentDetails(data.response);
@@ -83,6 +92,7 @@ export const PaymentResult: React.FC = () => {
         setTimeout(() => setIsRequesting(false), 5000); // Asegura un tiempo de espera antes de liberar
       }
     };
+    
 
     confirmPayment();
   }, [searchParams, dispatch, isRequesting]);

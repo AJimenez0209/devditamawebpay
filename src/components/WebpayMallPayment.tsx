@@ -19,47 +19,52 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
     try {
       setLoading(true);
       setError(null);
-
+  
+      // Validar que haya items antes de proceder
+      if (items.length === 0) {
+        throw new Error('No hay items para procesar el pago.');
+      }
+  
       // Calcular el total del monto
       const amount = items.reduce((sum, item) => sum + item.amount, 0);
-
+  
       // Generar un sessionId único
       const sessionId = `SESSION-${Date.now()}`;
-
-      // Enviar la solicitud al backend (el backend genera el `returnUrl`)
+  
+      // Enviar la solicitud al backend
       const response = await fetch('/api/payment/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          buyOrder: orderId, // Corresponde al ID de la orden principal
-          sessionId, // ID de sesión único
-          amount, // Total del monto
-          returnUrl: `${window.location.origin}/payment/result`, // URL de retorno
+          buyOrder: orderId,
+          sessionId,
+          amount,
+          returnUrl: `${window.location.origin}/payment/result`,
         }),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Error al iniciar el pago');
       }
-
+  
       const data = await response.json();
-      console.log('Respuesta del backend:', data); // Log para depuración
-
-      if (data.response?.url && data.response?.token) {
-        setPaymentData({ token: data.response.token, url: data.response.url }); // Ajusta para acceder correctamente
+  
+      if (data.url && data.token) {
+        setPaymentData({ token: data.token, url: data.url });
       } else {
         throw new Error('Respuesta inválida del servidor');
       }
-    } catch (error) {
-      console.error('Error iniciando el pago:', error);
-      setError(error instanceof Error ? error.message : 'Error desconocido');
+    } catch (error: any) {
+      console.error('Error initiating payment:', error);
+      setError(error.message || 'Error desconocido');
     } finally {
       setLoading(false);
     }
   };
+  
 
   if (paymentData) {
     return <WebpayRedirectForm token={paymentData.token} url={paymentData.url} />;
