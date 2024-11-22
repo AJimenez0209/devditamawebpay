@@ -30,29 +30,24 @@ export const PaymentResult: React.FC = () => {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [paymentDetails, setPaymentDetails] = useState<PaymentResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isRequesting, setIsRequesting] = useState(false); // Previene solicitudes duplicadas
 
   useEffect(() => {
     const confirmPayment = async () => {
       const token = searchParams.get('token_ws');
-    
       if (!token) {
         setStatus('error');
         setErrorMessage('Token de transacción no encontrado.');
         return;
       }
-    
-      // Revisa si el token ya fue procesado en sessionStorage
+
+      // Evita reintentos innecesarios si el token ya fue procesado
       if (sessionStorage.getItem(`processed_${token}`)) {
         console.log(`Token ${token} ya fue procesado.`);
         setStatus('success');
-        setPaymentDetails(null); // Evita mostrar detalles redundantes
+        setPaymentDetails(null); // Evita redundancia de detalles
         return;
       }
-    
-      if (isRequesting) return; // Evita solicitudes repetidas
-      setIsRequesting(true);
-    
+
       try {
         const apiBaseUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
         const response = await fetch(`${apiBaseUrl}/api/payment/confirm`, {
@@ -69,15 +64,15 @@ export const PaymentResult: React.FC = () => {
           console.log('Transacción confirmada con éxito.');
           setStatus('success');
           setPaymentDetails(data.response || null);
-          sessionStorage.setItem(`processed_${token}`, 'true');
+          sessionStorage.setItem(`processed_${token}`, 'true'); // Marca como procesado
           dispatch({ type: 'CLEAR_CART' });
           return;
         }
 
         if (response.status === 409) {
-          console.log('La transacción ya fue confirmada previamente.');
+          console.log('Transacción previamente confirmada.');
           setStatus('success');
-          setPaymentDetails(null); // Evita detalles redundantes
+          setPaymentDetails(null); // Evita mostrar detalles redundantes
           sessionStorage.setItem(`processed_${token}`, 'true');
           return;
         }
@@ -86,13 +81,11 @@ export const PaymentResult: React.FC = () => {
       } catch (error: any) {
         setStatus('error');
         setErrorMessage(error.message || 'Error desconocido al procesar el pago.');
-      } finally {
-        setTimeout(() => setIsRequesting(false), 5000); // Asegura un tiempo de espera antes de liberar
       }
     };
 
     confirmPayment();
-  }, [searchParams, dispatch, isRequesting]);
+  }, [searchParams, dispatch]);
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
