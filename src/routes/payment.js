@@ -72,7 +72,6 @@ router.post('/status', async (req, res) => {
 
 
 // Ruta para confirmar transacciones
-// Ruta para confirmar transacciones
 router.post('/confirm', async (req, res) => {
   const { token_ws } = req.body;
 
@@ -81,21 +80,21 @@ router.post('/confirm', async (req, res) => {
   }
 
   try {
-    // Verifica si el token ya está confirmado
     const tokenStatus = await client.get(token_ws);
 
+    // Si el token ya fue confirmado, devuelve los detalles directamente
     if (tokenStatus === 'confirmed') {
       console.log(`Token ${token_ws} ya fue confirmado.`);
       const confirmedDetails = await client.get(`details_${token_ws}`);
       return res.status(200).json({
         status: 'success',
-        response: JSON.parse(confirmedDetails), // Devuelve detalles si los tienes en Redis
+        response: JSON.parse(confirmedDetails),
       });
     }
 
-    // Intenta establecer el token como "en proceso" en Redis
+    // Bloquea el token como "en proceso"
     const setProcessing = await client.set(token_ws, 'processing', {
-      NX: true, // Solo lo establece si no existe
+      NX: true, // Solo si no existe
       EX: 300,  // Expira en 300 segundos
     });
 
@@ -109,17 +108,16 @@ router.post('/confirm', async (req, res) => {
 
     if (response.status === 'AUTHORIZED' && response.response_code === 0) {
       console.log('Transacción confirmada con éxito:', response);
-    
-      // Guarda el estado confirmado junto con los detalles
+
+      // Guarda los detalles de la transacción confirmada
       await client.set(token_ws, 'confirmed', { EX: 3600 });
       await client.set(`details_${token_ws}`, JSON.stringify(response), { EX: 3600 });
-    
+
       return res.json({ status: 'success', response });
-    
     } else {
       console.error('Error en la transacción:', response);
 
-      // Si falla la transacción, elimina el token de Redis
+      // Libera el token en caso de error
       await client.del(token_ws);
       return res.status(400).json({
         status: 'error',
@@ -130,7 +128,7 @@ router.post('/confirm', async (req, res) => {
   } catch (error) {
     console.error('Error confirmando la transacción:', error);
 
-    // Elimina el token en caso de errores inesperados
+    // Asegura liberar el token en caso de error
     await client.del(token_ws);
     return res.status(500).json({
       status: 'error',
@@ -139,6 +137,7 @@ router.post('/confirm', async (req, res) => {
     });
   }
 });
+
 
 
 
