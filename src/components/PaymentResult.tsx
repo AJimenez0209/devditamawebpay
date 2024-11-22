@@ -21,13 +21,14 @@ interface PaymentResponse {
   paymentTypeCode?: string;
   responseCode?: number;
   installmentsNumber?: number;
+  message?: string;
 }
 
 export const PaymentResult: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { dispatch } = useCart();
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'| 'processing'>('loading');
   const [paymentDetails, setPaymentDetails] = useState<PaymentResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isRequesting, setIsRequesting] = useState(false); // Previene duplicados
@@ -35,23 +36,18 @@ export const PaymentResult: React.FC = () => {
   useEffect(() => {
     const confirmPayment = async () => {
       const token = searchParams.get('token_ws');
+  
       if (!token) {
         setStatus('error');
         setErrorMessage('Token de transacción no encontrado.');
         return;
       }
   
-      // Si el token ya fue procesado, no volver a intentar.
       if (sessionStorage.getItem(`processed_${token}`)) {
         console.log(`Token ${token} ya fue procesado.`);
         setStatus('success');
         return;
       }
-  
-      // Prevenir solicitudes duplicadas.
-      if (isRequesting) return;
-  
-      setIsRequesting(true);
   
       try {
         const apiBaseUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
@@ -61,39 +57,32 @@ export const PaymentResult: React.FC = () => {
           body: JSON.stringify({ token_ws: token }),
         });
   
+        const data = await response.json();
+  
         if (response.status === 409) {
           console.log('La transacción está en proceso.');
-          setStatus('loading'); // Mantener estado de carga mientras se procesa.
+          setStatus('processing');
           return;
         }
   
-        if (response.status === 200) {
-          const data = await response.json();
-  
-          if (data.status === 'success') {
-            setStatus('success');
-            setPaymentDetails(data.response);
-            sessionStorage.setItem(`processed_${token}`, 'true'); // Marca como procesado.
-            dispatch({ type: 'CLEAR_CART' });
-          } else {
-            throw new Error(data.message || 'Error en la confirmación del pago.');
-          }
+        if (response.status === 200 && data.status === 'success') {
+          setStatus('success');
+          setPaymentDetails(data.response);
+          sessionStorage.setItem(`processed_${token}`, 'true');
+          dispatch({ type: 'CLEAR_CART' });
         } else {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Error al confirmar el pago');
+          throw new Error(data.message || 'Error al confirmar el pago.');
         }
-      } catch (error: any) {
-        if (!paymentDetails) {
-          setStatus('error');
-          setErrorMessage(error.message || 'Error desconocido.');
-        }
-      } finally {
-        setIsRequesting(false);
+      } catch (error:any) {
+        console.error('Error confirmando el pago:', error);
+        setStatus('error');
+        setErrorMessage(error.message || 'Error desconocido.');
       }
     };
   
     confirmPayment();
-  }, [searchParams, dispatch, isRequesting]);
+  }, [searchParams, dispatch]);
+  
   
  
 
