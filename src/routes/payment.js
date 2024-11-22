@@ -71,6 +71,7 @@ router.post('/status', async (req, res) => {
 });
 
 
+// Ruta para confirmar transacciones
 router.post('/confirm', async (req, res) => {
   const { token_ws } = req.body;
 
@@ -79,62 +80,48 @@ router.post('/confirm', async (req, res) => {
   }
 
   try {
-    // Recuperar estado del token en Redis.
-    const tokenData = await client.get(token_ws);
-    const tokenStatus = tokenData ? JSON.parse(tokenData).status : null;
+    // Revisar si el token ya está confirmado
+    const tokenStatus = await client.get(token_ws);
 
     if (tokenStatus === 'confirmed') {
       console.log(`Token ${token_ws} ya fue confirmado.`);
-      return res.status(200).json({
-        status: 'success',
-        message: 'La transacción ya fue confirmada previamente.',
-      });
+      return res.status(200).json({ status: 'success', message: 'La transacción ya fue confirmada previamente.' });
     }
 
     if (tokenStatus === 'processing') {
       console.log(`Token ${token_ws} ya está en proceso.`);
-      return res.status(409).json({ message: 'La transacción está en proceso.' });
+      return res.status(409).json({ status: 'processing', message: 'La transacción está siendo procesada.' });
     }
 
-    // Establecer token como "processing".
-    await client.set(
-      token_ws,
-      JSON.stringify({ status: 'processing' }),
-      { NX: true, EX: 300 } // Expiración de 300s.
-    );
+    // Bloquea el token como "en proceso"
+    const setProcessing = await client.set(token_ws, 'processing', { NX: true, EX: 60 });
 
-    // Confirmar transacción con Webpay.
+    if (!setProcessing) {
+      console.log(`Token ${token_ws} ya está en proceso por otro flujo.`);
+      return res.status(409).json({ status: 'processing', message: 'La transacción está siendo procesada.' });
+    }
+
+    // Confirmar transacción con Webpay
     const response = await webpayPlus.commit(token_ws);
 
     if (response.status === 'AUTHORIZED' && response.response_code === 0) {
       console.log('Transacción confirmada con éxito:', response);
 
-      // Actualizar estado del token a "confirmed".
-      await client.set(token_ws, JSON.stringify({ status: 'confirmed' }), { EX: 3600 });
-      return res.json({ status: 'success', response });
+      // Marca como "confirmado"
+      await client.set(token_ws, 'confirmed', { EX: 3600 });
+      return res.status(200).json({ status: 'success', response });
     } else {
-      console.error('Error en la transacción:', response);
-
-      // Eliminar token si no se confirma.
-      await client.del(token_ws);
-      return res.status(400).json({
-        status: 'error',
-        message: 'La transacción no fue autorizada',
-        response,
-      });
+      console.error('Error en la confirmación:', response);
+      await client.del(token_ws); // Elimina el lock en caso de error
+      return res.status(400).json({ status: 'error', message: 'La transacción no fue autorizada', response });
     }
   } catch (error) {
     console.error('Error confirmando la transacción:', error);
-
-    // Eliminar token en caso de error inesperado.
-    await client.del(token_ws);
-    return res.status(500).json({
-      status: 'error',
-      message: 'Error al confirmar el pago',
-      error: error.message,
-    });
+    await client.del(token_ws); // Libera el lock en caso de error
+    return res.status(500).json({ status: 'error', message: 'Error interno al confirmar la transacción', error: error.message });
   }
 });
+
 
 
 
