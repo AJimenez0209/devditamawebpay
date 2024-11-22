@@ -52,8 +52,9 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
   
       const data = await response.json();
   
-      if (data.url && data.token) {
-        setPaymentData({ token: data.token, url: data.url });
+      // Cambia la forma en que accedes a token y url
+      if (data.response?.url && data.response?.token) {
+        setPaymentData({ token: data.response.token, url: data.response.url });
       } else {
         throw new Error('Respuesta inválida del servidor');
       }
