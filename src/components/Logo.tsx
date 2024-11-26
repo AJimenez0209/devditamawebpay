@@ -15,8 +15,8 @@ export const Logo: React.FC = () => {
       </div>
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          <span className="text-blue-600">Baby</span>
-          <span className="text-gray-800">Diapers</span>
+          <span className="text-blue-600">Pañales</span>
+          <span className="text-gray-800">Ditama</span>
         </h1>
         <p className="text-xs text-gray-500 -mt-1">Tu tienda de confianza</p>
       </div>
