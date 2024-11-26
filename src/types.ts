@@ -1,8 +1,16 @@
 export type Size = 'RN' | 'P' | 'M' | 'G' | 'XG' | 'XXG' | 'XXXG';
 
+export interface BaseProduct {
+  id: string;
+  name: string;
+  image: string;
+  description: string;
+  prices: Record<Size, number>;
+  unitsPerPack: Record<Size, number>;
+}
+
 export interface Product {
   id: string;
-  baseId: string;
   name: string;
   price: number;
   image: string;

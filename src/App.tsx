@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { CartProvider } from './context/CartContext';
 import { ProductCard } from './components/ProductCard';
 import { Cart } from './components/Cart';
@@ -7,9 +7,9 @@ import { Logo } from './components/Logo';
 import { formatCLP } from './utils/currency';
 import { Product, Size } from './types';
 
-const SIZES: Size[] = ['RN', 'P', 'M', 'G', 'XG', 'XXG', 'XXXG'];
+export const SIZES: Size[] = ['RN', 'P', 'M', 'G', 'XG', 'XXG', 'XXXG'];
 
-const SIZE_WEIGHTS = {
+export const SIZE_WEIGHTS = {
   RN: '2-4.5 kg',
   P: '3-6 kg',
   M: '6-10 kg',
@@ -21,11 +21,11 @@ const SIZE_WEIGHTS = {
 
 const PRODUCTS_BASE = [
   {
-    baseId: '1',
+    id: '1',
     name: 'Pañales Premium Clásicos',
     image: 'https://www.maicao.cl/dw/image/v2/BDPM_PRD/on/demandware.static/-/Sites-masterCatalog_Chile/default/dw22f98a25/images/large/293133-pampers-panal-36-unidades.jpg?sw=1000&sh=1000',
     description: 'Pañales ultra suaves con máxima absorción',
-    basePrices: {
+    prices: {
       RN: 15990,
       P: 17990,
       M: 19990,
@@ -45,11 +45,11 @@ const PRODUCTS_BASE = [
     }
   },
   {
-    baseId: '2',
+    id: '2',
     name: 'Pañales Premium Hipoalergénicos',
     image: 'https://dojiw2m9tvv09.cloudfront.net/71536/product/X_babysec-super-premium-xxg4128.png?40&time=1732588659',
     description: 'Especialmente diseñados para pieles sensibles',
-    basePrices: {
+    prices: {
       RN: 16990,
       P: 18990,
       M: 20990,
@@ -69,11 +69,11 @@ const PRODUCTS_BASE = [
     }
   },
   {
-    baseId: '3',
+    id: '3',
     name: 'Pañales Ecológicos Biodegradables',
     image: 'https://xn--ecopaal-8za.cl/wp-content/uploads/2024/01/Panal-Ecologico-Nateen-L-128-unidades-600x600.png',
     description: 'Amigables con el medio ambiente y la piel del bebé',
-    basePrices: {
+    prices: {
       RN: 17990,
       P: 19990,
       M: 21990,
@@ -94,29 +94,7 @@ const PRODUCTS_BASE = [
   }
 ];
 
-// Generate all product variants with sizes
-const products: Product[] = PRODUCTS_BASE.flatMap(product => 
-  SIZES.map(size => ({
-    id: `${product.baseId}-${size}`,
-    baseId: product.baseId,
-    name: `${product.name} - Talla ${size}`,
-    price: product.basePrices[size],
-    image: product.image,
-    description: `${product.description} - Para bebés de ${SIZE_WEIGHTS[size]}`,
-    size,
-    quantity: product.unitsPerPack[size],
-    unitsPerPack: product.unitsPerPack[size],
-    formattedPrice: formatCLP(product.basePrices[size])
-  }))
-);
-
 function App() {
-  const [selectedSize, setSelectedSize] = useState<Size | 'all'>('all');
-
-  const filteredProducts = selectedSize === 'all' 
-    ? products 
-    : products.filter(product => product.size === selectedSize);
-
   return (
     <CartProvider>
       <div className="min-h-screen bg-gray-100">
@@ -131,45 +109,11 @@ function App() {
         <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <h2 className="text-2xl font-bold text-gray-900">Nuestros Productos</h2>
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700">Filtrar por talla:</span>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => setSelectedSize('all')}
-                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                          selectedSize === 'all'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                      >
-                        Todas
-                      </button>
-                      {SIZES.map((size) => (
-                        <button
-                          key={size}
-                          onClick={() => setSelectedSize(size)}
-                          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                            selectedSize === size
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                          title={`Para bebés de ${SIZE_WEIGHTS[size]}`}
-                        >
-                          {size}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Nuestros Productos</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {PRODUCTS_BASE.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
               </div>
             </div>
             <div className="space-y-6">
