@@ -1,9 +1,9 @@
 import React from 'react';
-import { Baby } from 'lucide-react';
 import { CartProvider } from './context/CartContext';
 import { ProductCard } from './components/ProductCard';
 import { Cart } from './components/Cart';
 import { Checkout } from './components/Checkout';
+import { Logo } from './components/Logo';
 import { formatCLP } from './utils/currency';
 
 const products = [
@@ -49,10 +49,7 @@ function App() {
         <header className="bg-white shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Baby className="h-8 w-8 text-blue-600" />
-                <h1 className="text-2xl font-bold text-gray-900">BabyDiapers</h1>
-              </div>
+              <Logo />
             </div>
           </div>
         </header>
