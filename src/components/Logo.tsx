@@ -7,7 +7,7 @@ export const Logo: React.FC = () => {
         <div className="absolute -inset-1 bg-blue-100 rounded-full blur"></div>
         <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-blue-600 shadow-lg">
           <img
-            src="https://i.ibb.https://instagram.fscl13-1.fna.fbcdn.net/v/t51.2885-19/453522625_1380197132880427_7599713530620507518_n.jpg?stp=dst-jpg_s150x150_tt6&_nc_ht=instagram.fscl13-1.fna.fbcdn.net&_nc_cat=107&_nc_ohc=Wk72lvZM49kQ7kNvgEJpyuS&_nc_gid=9f9b6e28a31c45eab7670855d22b491e&edm=AP4sbd4BAAAA&ccb=7-5&oh=00_AYBUAE6tB4ymwwluz75P3tBHsHUEqMOJTnlJ72HTG_11ng&oe=674AEC32&_nc_sid=7a9f4b/VvLNYZz/LOGO-DITAMA.jpg"
+            src="https://scontent.fscl13-1.fna.fbcdn.net/v/t39.30808-1/453009623_2163452557366304_1904590804030137489_n.jpg?stp=dst-jpg_s200x200&_nc_cat=107&ccb=1-7&_nc_sid=0ecb9b&_nc_eui2=AeFF0qtjtxckb05xxP-UIVafPbIr-SU7dYc9siv5JTt1hzaseVAAJWz_fzqxSshEppAVt22PUVTL_M3Qpd3ZLePC&_nc_ohc=yp_rM_grEyUQ7kNvgGPHRZ-&_nc_zt=24&_nc_ht=scontent.fscl13-1.fna&_nc_gid=AJxPjBRbfzNUibrC8gQgNvu&oh=00_AYBEN9oDDP5BL8zB8tz07E9Uc3Dz_g859yBe8a5nrCG6aw&oe=674AF2A1"
             alt="Ditama Pañales"
             className="w-full h-full object-cover"
           />
