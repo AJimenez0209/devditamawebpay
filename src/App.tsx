@@ -5,8 +5,7 @@ import { Cart } from './components/Cart';
 import { Checkout } from './components/Checkout';
 import { Logo } from './components/Logo';
 import { formatCLP } from './utils/currency';
-
-type Size = 'RN' | 'P' | 'M' | 'G' | 'XG' | 'XXG' | 'XXXG';
+import { Product, Size } from './types';
 
 const SIZES: Size[] = ['RN', 'P', 'M', 'G', 'XG', 'XXG', 'XXXG'];
 
@@ -18,7 +17,7 @@ const SIZE_WEIGHTS = {
   XG: '12-15 kg',
   XXG: '14-17 kg',
   XXXG: '+16 kg'
-};
+} as const;
 
 const PRODUCTS_BASE = [
   {
@@ -96,9 +95,10 @@ const PRODUCTS_BASE = [
 ];
 
 // Generate all product variants with sizes
-const products = PRODUCTS_BASE.flatMap(product => 
+const products: Product[] = PRODUCTS_BASE.flatMap(product => 
   SIZES.map(size => ({
     id: `${product.baseId}-${size}`,
+    baseId: product.baseId,
     name: `${product.name} - Talla ${size}`,
     price: product.basePrices[size],
     image: product.image,
@@ -156,6 +156,7 @@ function App() {
                               ? 'bg-blue-600 text-white'
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                           }`}
+                          title={`Para bebés de ${SIZE_WEIGHTS[size]}`}
                         >
                           {size}
                         </button>

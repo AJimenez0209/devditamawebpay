@@ -1,10 +1,13 @@
+export type Size = 'RN' | 'P' | 'M' | 'G' | 'XG' | 'XXG' | 'XXXG';
+
 export interface Product {
   id: string;
+  baseId: string;
   name: string;
   price: number;
   image: string;
   description: string;
-  size: string;
+  size: Size;
   quantity: number;
   unitsPerPack: number;
   formattedPrice: string;
