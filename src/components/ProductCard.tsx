@@ -43,33 +43,55 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <p className="text-sm text-gray-600 mt-1">{product.description}</p>
         
         <div className="mt-4 space-y-3">
-          <div className="flex flex-col">
-            <label htmlFor={`size-${product.id}`} className="text-sm font-medium text-gray-700 mb-1">
-              Seleccionar Talla:
-            </label>
-            <select
-              id={`size-${product.id}`}
-              value={selectedSize}
-              onChange={(e) => setSelectedSize(e.target.value as Size)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">Seleccione una talla</option>
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">Seleccionar Talla:</p>
+            <div className="grid grid-cols-4 gap-2">
               {SIZES.map((size) => (
-                <option key={size} value={size}>
-                  {size} ({SIZE_WEIGHTS[size]}) - {product.unitsPerPack[size]} unidades
-                </option>
+                <label
+                  key={size}
+                  className={`
+                    relative flex flex-col items-center justify-center p-2 rounded-lg border cursor-pointer
+                    transition-all duration-200 hover:border-blue-500
+                    ${selectedSize === size ? 'border-blue-600 bg-blue-50' : 'border-gray-200'}
+                  `}
+                >
+                  <input
+                    type="radio"
+                    name={`size-${product.id}`}
+                    value={size}
+                    checked={selectedSize === size}
+                    onChange={(e) => setSelectedSize(e.target.value as Size)}
+                    className="sr-only"
+                  />
+                  <span className={`text-sm font-semibold ${selectedSize === size ? 'text-blue-600' : 'text-gray-900'}`}>
+                    {size}
+                  </span>
+                  <span className="text-xs text-gray-500 text-center">
+                    {SIZE_WEIGHTS[size]}
+                  </span>
+                </label>
               ))}
-            </select>
+            </div>
           </div>
 
           {selectedSize && (
-            <div className="space-y-2">
-              <p className="text-sm text-gray-600">
-                {product.unitsPerPack[selectedSize]} unidades por paquete
-              </p>
-              <p className="text-lg font-bold text-blue-600">
-                {formatCLP(product.prices[selectedSize])}
-              </p>
+            <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-gray-600">
+                  Unidades por paquete:
+                </p>
+                <span className="font-semibold">
+                  {product.unitsPerPack[selectedSize]}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-gray-600">
+                  Precio:
+                </p>
+                <span className="text-lg font-bold text-blue-600">
+                  {formatCLP(product.prices[selectedSize])}
+                </span>
+              </div>
             </div>
           )}
 
