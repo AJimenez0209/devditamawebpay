@@ -27,7 +27,7 @@ interface PaymentResponse {
 
 const getPaymentTypeLabel = (code: string | undefined): string => {
   if (!code) return 'Desconocido';
-  
+
   const types: Record<string, string> = {
     VD: 'Débito',
     VN: 'Crédito',
@@ -37,7 +37,7 @@ const getPaymentTypeLabel = (code: string | undefined): string => {
     NC: 'N cuotas sin interés',
     VP: 'Prepago'
   };
-  
+
   return types[code] || code;
 };
 
@@ -53,7 +53,7 @@ export const PaymentResult: React.FC = () => {
   useEffect(() => {
     const confirmPayment = async () => {
       const token = searchParams.get('token_ws');
-  
+
       if (!token) {
         setStatus('error');
         setErrorMessage(
@@ -61,13 +61,13 @@ export const PaymentResult: React.FC = () => {
         );
         return;
       }
-  
+
       if (sessionStorage.getItem(`processed_${token}`)) {
         console.log(`Token ${token} ya fue procesado.`);
         setStatus('success');
         return;
       }
-  
+
       try {
         const apiBaseUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
         const response = await fetch(`${apiBaseUrl}/api/payment/confirm`, {
@@ -75,18 +75,31 @@ export const PaymentResult: React.FC = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token_ws: token }),
         });
-  
+
         const data = await response.json();
-  
+
         if (response.status === 409) {
           console.log('La transacción está en proceso.');
           setStatus('processing');
           return;
         }
-  
+
         if (response.status === 200 && data.status === 'success') {
           setStatus('success');
-          setPaymentDetails(data.response);
+          setPaymentDetails({
+            amount: data.response.amount,
+            status: data.response.status,
+            buyOrder: data.response.buy_order,
+            sessionId: data.response.session_id,
+            cardDetail: data.response.card_detail,
+            transactionDate: data.response.transaction_date,
+            authorizationCode: data.response.authorization_code,
+            paymentTypeCode: data.response.payment_type_code,
+            responseCode: data.response.response_code,
+            installmentsNumber: data.response.installments_number,
+            message: data.response.message,
+          });
+
           sessionStorage.setItem(`processed_${token}`, 'true');
           dispatch({ type: 'CLEAR_CART' });
         } else {
@@ -98,7 +111,7 @@ export const PaymentResult: React.FC = () => {
         setErrorMessage(error.message || 'Error desconocido.');
       }
     };
-  
+
     confirmPayment();
   }, [searchParams, dispatch]);
 

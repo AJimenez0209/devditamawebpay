@@ -2,6 +2,7 @@ const express = require('express');
 const { WebpayPlus, Environment } = require('transbank-sdk');
 const dotenv = require('dotenv');
 const redis = require('redis');
+const Transaction = require('../models/Transaction'); // Asegúrate de que la ruta sea correcta
 
 dotenv.config();
 
@@ -18,7 +19,7 @@ const webpayPlus = new WebpayPlus.Transaction({
 const client = redis.createClient({
   url: process.env.REDIS_URL,
   socket: {
-    tls: true, // Activar conexión TLS
+    tls: false, // Activar conexión TLS o false si es local
     rejectUnauthorized: false, // Permitir certificados autofirmados
   },
 });
@@ -107,9 +108,31 @@ router.post('/confirm', async (req, res) => {
     if (response.status === 'AUTHORIZED' && response.response_code === 0) {
       console.log('Transacción confirmada con éxito:', response);
 
+      // Guardar en MongoDB
+      await Transaction.create(response); // Asegúrate de que el modelo Transaction esté importado correctamente
+      console.log('Transacción guardada en MongoDB:', response);
+
       // Marca como "confirmado"
       await client.set(token_ws, 'confirmed', { EX: 3600 });
-      return res.status(200).json({ status: 'success', response });
+      const toCamelCase = (data) => ({
+        amount: data.amount,
+        status: data.status,
+        buyOrder: data.buy_order,
+        sessionId: data.session_id,
+        cardDetail: data.card_detail,
+        transactionDate: data.transaction_date,
+        authorizationCode: data.authorization_code,
+        paymentTypeCode: data.payment_type_code,
+        responseCode: data.response_code,
+        installmentsNumber: data.installments_number,
+        message: data.message,
+      });
+
+      return res.status(200).json({
+        status: 'success',
+        response: toCamelCase(response),
+      });
+
     } else {
       console.error('Error en la confirmación:', response);
       await client.del(token_ws); // Elimina el lock en caso de error
@@ -120,6 +143,7 @@ router.post('/confirm', async (req, res) => {
     await client.del(token_ws); // Libera el lock en caso de error
     return res.status(500).json({ status: 'error', message: 'Error interno al confirmar la transacción', error: error.message });
   }
+
 });
 
 
