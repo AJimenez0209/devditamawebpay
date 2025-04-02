@@ -1,28 +1,21 @@
 export type Size = 'RN' | 'P' | 'M' | 'G' | 'XG' | 'XXG' | 'XXXG';
 
 export interface BaseProduct {
-  id: string;
   name: string;
   image: string;
   description: string;
-  prices: Record<Size, number>;
-  unitsPerPack: Record<Size, number>;
+  prices: { [key in Size]: number };
+  unitsPerPack?: { [key in Size]: number };
 }
 
-export interface Product {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  description: string;
-  size: Size;
-  quantity: number;
-  unitsPerPack: number;
-  formattedPrice: string;
+export interface Product extends BaseProduct {
+  _id: string;
+  stock?: number;
 }
-
 export interface CartItem extends Product {
   quantity: number;
+  unitsInPack?: number; // <- este es el nuevo campo
+  formattedPrice: string;
 }
 
 export type PaymentMethod = 'cash' | 'card' | 'transfer';

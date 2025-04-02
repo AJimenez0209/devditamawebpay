@@ -12,6 +12,7 @@ require('dotenv').config();
 
 
 
+
 // Configuración de variables de entorno
 dotenv.config();
 
@@ -33,6 +34,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payment', paymentRoutes);
+
+
 
 
 // Manejo de archivos estáticos en producción e integración

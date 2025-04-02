@@ -5,10 +5,13 @@ import { useCart } from '../context/CartContext';
 import { formatCLP } from '../utils/currency';
 import { SIZES, SIZE_WEIGHTS } from '../App';
 import { Notification } from './Notification';
+import { Product } from '../types';
 
 interface ProductCardProps {
-  product: BaseProduct;
+  product: Product;
 }
+
+
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { dispatch } = useCart();
@@ -17,36 +20,37 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   const handleAddToCart = () => {
     if (!selectedSize) return;
-
+  
     const cartItem = {
-      id: `${product.id}-${selectedSize}`,
+      _id: product._id,
       name: `${product.name} - Talla ${selectedSize}`,
-      price: product.prices[selectedSize],
       image: product.image,
       description: `${product.description} - Para bebés de ${SIZE_WEIGHTS[selectedSize]}`,
+      prices: product.prices,
       size: selectedSize,
       quantity: 1,
-      unitsPerPack: product.unitsPerPack[selectedSize],
+      unitsInPack: product.unitsPerPack?.[selectedSize] ?? 0,
+      stock: product.stock ?? 0,
       formattedPrice: formatCLP(product.prices[selectedSize])
     };
-
+  
     dispatch({ type: 'ADD_ITEM', payload: cartItem });
-    
-    // Show notification
+  
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 3000);
   };
+ 
 
   return (
     <>
       {showNotification && (
-        <Notification 
+        <Notification
           message="¡Producto agregado al carrito!"
           productName={product.name}
           size={selectedSize}
         />
       )}
-      
+
       <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105">
         <img
           src={product.image}
@@ -56,7 +60,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <div className="p-4">
           <h3 className="text-lg font-semibold text-gray-800">{product.name}</h3>
           <p className="text-sm text-gray-600 mt-1">{product.description}</p>
-          
+
           <div className="mt-4 space-y-3">
             <div>
               <p className="text-sm font-medium text-gray-700 mb-2">Seleccionar Talla:</p>
@@ -72,7 +76,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   >
                     <input
                       type="radio"
-                      name={`size-${product.id}`}
+                      name={`size-${product._id}`}
                       value={size}
                       checked={selectedSize === size}
                       onChange={(e) => setSelectedSize(e.target.value as Size)}
@@ -96,7 +100,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     Unidades por paquete:
                   </p>
                   <span className="font-semibold">
-                    {product.unitsPerPack[selectedSize]}
+                    {product.unitsPerPack?.[selectedSize] ?? '-'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
