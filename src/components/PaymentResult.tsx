@@ -85,24 +85,13 @@ export const PaymentResult: React.FC = () => {
         }
 
         if (response.status === 200 && data.status === 'success') {
-          setStatus('success');
-          setPaymentDetails({
-            amount: data.response.amount,
-            status: data.response.status,
-            buyOrder: data.response.buy_order,
-            sessionId: data.response.session_id,
-            cardDetail: data.response.card_detail,
-            transactionDate: data.response.transaction_date,
-            authorizationCode: data.response.authorization_code,
-            paymentTypeCode: data.response.payment_type_code,
-            responseCode: data.response.response_code,
-            installmentsNumber: data.response.installments_number,
-            message: data.response.message,
-          });
-
+          console.log('[DEBUG] Respuesta del backend:', data.response);
+          setPaymentDetails(data.response);
+          setStatus('success'); // ✅ importante
           sessionStorage.setItem(`processed_${token}`, 'true');
           dispatch({ type: 'CLEAR_CART' });
-        } else {
+        }
+        else {
           throw new Error(data.message || 'Error al confirmar el pago.');
         }
       } catch (error: any) {

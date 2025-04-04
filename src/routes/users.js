@@ -35,12 +35,14 @@ router.post(
         name,
         email,
         password: hashedPassword,
+        isAdmin: true // 👈 admin temporal
       });
+      
 
       await user.save();
 
       const token = jwt.sign(
-        { userId: user._id },
+        { userId: user._id, isAdmin: user.isAdmin },
         process.env.JWT_SECRET || 'your-secret-key',
         { expiresIn: '1h' }
       );
@@ -79,7 +81,7 @@ router.post(
       }
 
       const token = jwt.sign(
-        { userId: user._id },
+        { userId: user._id, isAdmin: user.isAdmin },
         process.env.JWT_SECRET || 'your-secret-key',
         { expiresIn: '1h' }
       );

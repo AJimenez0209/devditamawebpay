@@ -8,6 +8,9 @@ import productRoutes from './routes/products.js';
 import orderRoutes from './routes/orders.js';
 import userRoutes from './routes/users.js';
 import paymentRoutes from './routes/payment.js';
+import adminRoutes from './routes/adminRoutes.js';
+
+
 
 // Necesario para usar __dirname con ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -34,6 +37,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payment', paymentRoutes);
+// Importar las rutas de adminRoutes.js
+app.use('/api', adminRoutes); // 👈 Ahora accederás a /api/admin/products
 
 // Manejo de archivos estáticos en producción e integración
 if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'integracion') {

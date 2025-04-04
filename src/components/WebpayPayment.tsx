@@ -2,15 +2,15 @@ import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { WebpayRedirectForm } from './WebpayRedirectForm';
 
-interface WebpayMallPaymentProps {
-  orderId: string; // ID de la orden principal
-  items: Array<{
-    amount: number; // Monto de cada item
-    storeIndex: number; // Índice de la tienda asociada al ítem
-  }>;
+interface WebpayPlusPaymentProps {
+  orderId: string;
+  amount: number;
 }
 
-export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, items }) => {
+console.log('✅ Este es el PaymentResult.tsx correcto');
+
+
+export const WebpayPlusPayment: React.FC<WebpayPlusPaymentProps> = ({ orderId, amount }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paymentData, setPaymentData] = useState<{ token: string; url: string } | null>(null);
@@ -20,30 +20,21 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
       setLoading(true);
       setError(null);
 
-      // Validar que haya items antes de proceder
-      if (items.length === 0) {
-        throw new Error('No hay items para procesar el pago.');
+      // Validar monto
+      if (!amount || isNaN(amount) || amount <= 0) {
+        throw new Error('El monto total es inválido.');
       }
 
-      // Calcular el total del monto
-      const amount = items.reduce((sum, item) => sum + item.amount, 0);
-
-      // Generar un sessionId único
       const sessionId = `SESSION-${Date.now()}`;
-
-      // Enviar la solicitud al backend
       const response = await fetch('/api/payment/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          buyOrder: orderId, // Corresponde al ID de la orden principal
-          sessionId, // ID de sesión único
-          amount, // Total del monto
-          returnUrl: `${window.location.origin}/payment/result`, // URL de retorno
+          buyOrder: orderId,
+          sessionId,
+          amount,
+          returnUrl: `${window.location.origin}/payment/result`,
         }),
-        
       });
 
       if (!response.ok) {
@@ -52,14 +43,14 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
       }
 
       const data = await response.json();
-
-      if (data.url && data.token) {
-        setPaymentData({ token: data.token, url: data.url });
+      if (data.response?.url && data.response?.token) {
+        setPaymentData({ token: data.response.token, url: data.response.url });
       } else {
         throw new Error('Respuesta inválida del servidor');
       }
+
     } catch (error: any) {
-      console.error('Error initiating payment:', error);
+      console.error('Error al iniciar el pago:', error);
       setError(error.message || 'Error desconocido');
     } finally {
       setLoading(false);
@@ -67,7 +58,6 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
   };
 
   if (paymentData) {
-    // Redirige a la URL proporcionada por Transbank
     return <WebpayRedirectForm token={paymentData.token} url={paymentData.url} />;
   }
 
@@ -84,7 +74,7 @@ export const WebpayMallPayment: React.FC<WebpayMallPaymentProps> = ({ orderId, i
         className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400 flex items-center justify-center gap-2"
       >
         {loading && <Loader2 className="animate-spin" size={20} />}
-        {loading ? 'Procesando...' : 'Pagar con Webpay Mall'}
+        {loading ? 'Procesando...' : 'Pagar con Webpay'}
       </button>
     </div>
   );

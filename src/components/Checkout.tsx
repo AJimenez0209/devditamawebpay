@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { PaymentMethod, DeliveryMethod, OrderDetails } from '../types';
-import { WebpayMallPayment } from './WebpayMallPayment';
+import { WebpayPlusPayment } from './WebpayPayment';
 import { formatCLP } from '../utils/currency';
 import { Receipt } from 'lucide-react';
 import { Voucher } from './Voucher';
@@ -20,6 +20,7 @@ export const Checkout: React.FC = () => {
     }
   }, [paymentMethod]);
 
+
   const handlePaymentMethodChange = (method: PaymentMethod) => {
     setPaymentMethod(method);
     if (method === 'cash') {
@@ -30,7 +31,7 @@ export const Checkout: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (paymentMethod === 'card') {
       const newOrderId = `ORDER-${Date.now()}`;
       setOrderId(newOrderId);
@@ -51,11 +52,12 @@ export const Checkout: React.FC = () => {
 
   const storeAddress = "Av. Principal 123, Local 45";
 
-  // Prepare items for Webpay Mall transaction
-  const mallItems = state.items.map((item) => ({
-    amount: Math.round(item.price * item.quantity),
-    storeIndex: 0,
-  }));
+  const totalAmount = Math.round(
+    state.items.reduce((sum, item) => {
+      const unitPrice = item.prices[item.size] || 0;
+      return sum + unitPrice * item.quantity;
+    }, 0)
+  );
 
   if (showVoucher) {
     return (
@@ -183,7 +185,8 @@ export const Checkout: React.FC = () => {
             <span>{formatCLP(state.total)}</span>
           </div>
           {orderId && paymentMethod === 'card' ? (
-            <WebpayMallPayment orderId={orderId} items={mallItems} />
+            <WebpayPlusPayment orderId={orderId} amount={totalAmount} />
+
           ) : (
             <button
               type="submit"

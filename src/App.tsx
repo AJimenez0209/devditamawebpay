@@ -8,6 +8,10 @@ import { Product, Size } from './types';
 import { Routes, Route, BrowserRouter } from 'react-router-dom';
 import ProductList from './pages/admin/ProductList';
 import ProductForm from './pages/admin/ProductForm';
+import Login from './pages/Login';
+import RequireAdmin from './components/RequireAdmin';
+
+
 
 export const SIZES: Size[] = ['RN', 'P', 'M', 'G', 'XG', 'XXG', 'XXXG'];
 
@@ -33,7 +37,6 @@ function App() {
 
   return (
     <CartProvider>
-      <BrowserRouter>
         <div className="min-h-screen bg-gray-100">
           <header className="bg-white shadow-sm">
             <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
@@ -67,13 +70,36 @@ function App() {
               />
 
               {/* Rutas del panel de administración */}
-              <Route path="/admin/products" element={<ProductList />} />
-              <Route path="/admin/products/new" element={<ProductForm />} />
-              <Route path="/admin/products/:id" element={<ProductForm />} />
+              <Route
+                path="/admin/products"
+                element={
+                  <RequireAdmin>
+                    <ProductList />
+                  </RequireAdmin>
+                }
+              />
+
+              <Route
+                path="/admin/products/new"
+                element={
+                  <RequireAdmin>
+                    <ProductForm />
+                  </RequireAdmin>
+                }
+              />
+
+              <Route
+                path="/admin/products/:id"
+                element={
+                  <RequireAdmin>
+                    <ProductForm />
+                  </RequireAdmin>
+                }
+              />
+
             </Routes>
           </main>
         </div>
-      </BrowserRouter>
     </CartProvider>
   );
 }
