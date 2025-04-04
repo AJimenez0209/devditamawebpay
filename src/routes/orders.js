@@ -1,6 +1,6 @@
-const express = require('express');
-const { body, validationResult } = require('express-validator');
-const Order = require('../models/Order');
+import express from 'express';
+import { body, validationResult } from 'express-validator';
+import Order from '../models/Order.js';
 
 const router = express.Router();
 
@@ -32,7 +32,6 @@ router.post(
     }
 
     try {
-      // Validate payment and delivery method combination
       if (req.body.paymentMethod === 'cash' && req.body.deliveryMethod === 'delivery') {
         return res.status(400).json({
           message: 'Cash payment is only available for store pickup',
@@ -73,4 +72,4 @@ router.patch(
   }
 );
 
-module.exports = router;
+export default router;

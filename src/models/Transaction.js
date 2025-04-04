@@ -1,18 +1,19 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const transactionSchema = new mongoose.Schema({
-  token: String,
-  status: String,
-  amount: Number,
   buy_order: String,
   session_id: String,
-  card_detail: {
-    card_number: String,
-  },
+  amount: Number,
+  status: String,
+  card_detail: Object,
+  transaction_date: String,
   authorization_code: String,
   payment_type_code: String,
-  transaction_date: Date,
+  response_code: Number,
   installments_number: Number,
-});
+  message: String,
+}, { timestamps: true });
 
-module.exports = mongoose.model('Transaction', transactionSchema);
+const Transaction = mongoose.model('Transaction', transactionSchema);
+
+export default Transaction;

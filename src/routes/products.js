@@ -1,6 +1,6 @@
-const express = require('express');
-const { body, validationResult } = require('express-validator');
-const Product = require('../models/Product');
+import express from 'express';
+import { body, validationResult } from 'express-validator';
+import Product from '../models/ProductModel.js';
 
 const router = express.Router();
 
@@ -55,4 +55,4 @@ router.post(
   }
 );
 
-module.exports = router;
+export default router;

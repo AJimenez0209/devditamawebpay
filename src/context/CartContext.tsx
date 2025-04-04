@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer } from 'react';
-import { CartItem, Product } from '../types';
+import { CartItem, Size } from '../types';
 
 interface CartState {
   items: CartItem[];
@@ -7,9 +7,9 @@ interface CartState {
 }
 
 type CartAction =
-  | { type: 'ADD_ITEM'; payload: Product }
-  | { type: 'REMOVE_ITEM'; payload: string }
-  | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
+  | { type: 'ADD_ITEM'; payload: CartItem }
+  | { type: 'REMOVE_ITEM'; payload: { _id: string; size: Size } }
+  | { type: 'UPDATE_QUANTITY'; payload: { _id: string; size: Size; quantity: number } }
   | { type: 'CLEAR_CART' };
 
 const CartContext = createContext<{
@@ -20,48 +20,65 @@ const CartContext = createContext<{
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case 'ADD_ITEM': {
-      const existingItem = state.items.find(item => item.id === action.payload.id);
+      const existingItem = state.items.find(
+        item => item._id === action.payload._id && item.size === action.payload.size
+      );
+
       if (existingItem) {
         return {
           ...state,
           items: state.items.map(item =>
-            item.id === action.payload.id
+            item._id === action.payload._id && item.size === action.payload.size
               ? { ...item, quantity: item.quantity + 1 }
               : item
           ),
-          total: state.total + action.payload.price,
+          total: state.total + action.payload.prices[action.payload.size],
         };
       }
+
       return {
         ...state,
         items: [...state.items, { ...action.payload, quantity: 1 }],
-        total: state.total + action.payload.price,
+        total: state.total + action.payload.prices[action.payload.size],
       };
     }
+
     case 'REMOVE_ITEM': {
-      const item = state.items.find(item => item.id === action.payload);
+      const item = state.items.find(
+        i => i._id === action.payload._id && i.size === action.payload.size
+      );
+      if (!item) return state;
+
       return {
         ...state,
-        items: state.items.filter(item => item.id !== action.payload),
-        total: state.total - (item ? item.price * item.quantity : 0),
+        items: state.items.filter(
+          i => !(i._id === action.payload._id && i.size === action.payload.size)
+        ),
+        total: state.total - item.prices[item.size] * item.quantity,
       };
     }
+
     case 'UPDATE_QUANTITY': {
-      const item = state.items.find(item => item.id === action.payload.id);
+      const item = state.items.find(
+        i => i._id === action.payload._id && i.size === action.payload.size
+      );
       if (!item) return state;
+
       const quantityDiff = action.payload.quantity - item.quantity;
       return {
         ...state,
-        items: state.items.map(item =>
-          item.id === action.payload.id
-            ? { ...item, quantity: action.payload.quantity }
-            : item
+        items: state.items.map(i =>
+          i._id === action.payload._id && i.size === action.payload.size
+            ? { ...i, quantity: action.payload.quantity }
+            : i
         ),
-        total: state.total + item.price * quantityDiff,
+        total: state.total + item.prices[item.size] * quantityDiff,
       };
     }
+
     case 'CLEAR_CART':
       return { items: [], total: 0 };
+
     default:
       return state;
   }

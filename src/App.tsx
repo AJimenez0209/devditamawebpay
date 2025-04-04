@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CartProvider } from './context/CartContext';
 import { ProductCard } from './components/ProductCard';
 import { Cart } from './components/Cart';
 import { Checkout } from './components/Checkout';
 import { Logo } from './components/Logo';
-import { formatCLP } from './utils/currency';
 import { Product, Size } from './types';
+import { Routes, Route, BrowserRouter } from 'react-router-dom';
+import ProductList from './pages/admin/ProductList';
+import ProductForm from './pages/admin/ProductForm';
 
 export const SIZES: Size[] = ['RN', 'P', 'M', 'G', 'XG', 'XXG', 'XXXG'];
 
@@ -31,32 +33,47 @@ function App() {
 
   return (
     <CartProvider>
-      <div className="min-h-screen bg-gray-100">
-        <header className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between">
-              <Logo />
-            </div>
-          </div>
-        </header>
-
-        <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Nuestros Productos</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {products.map((product) => (
-                  <ProductCard key={product._id} product={product} />
-                ))}
+      <BrowserRouter>
+        <div className="min-h-screen bg-gray-100">
+          <header className="bg-white shadow-sm">
+            <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between">
+                <Logo />
               </div>
             </div>
-            <div className="space-y-6">
-              <Cart />
-              <Checkout />
-            </div>
-          </div>
-        </main>
-      </div>
+          </header>
+
+          <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <Routes>
+              {/* Página pública principal */}
+              <Route
+                path="/"
+                element={
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2">
+                      <h2 className="text-2xl font-bold text-gray-900 mb-6">Nuestros Productos</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {products.map((product) => (
+                          <ProductCard key={product._id} product={product} />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-6">
+                      <Cart />
+                      <Checkout />
+                    </div>
+                  </div>
+                }
+              />
+
+              {/* Rutas del panel de administración */}
+              <Route path="/admin/products" element={<ProductList />} />
+              <Route path="/admin/products/new" element={<ProductForm />} />
+              <Route path="/admin/products/:id" element={<ProductForm />} />
+            </Routes>
+          </main>
+        </div>
+      </BrowserRouter>
     </CartProvider>
   );
 }

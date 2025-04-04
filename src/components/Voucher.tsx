@@ -1,5 +1,4 @@
 import React from 'react';
-import { Package2 } from 'lucide-react';
 import { CartItem } from '../types';
 import { formatCLP } from '../utils/currency';
 
@@ -34,16 +33,18 @@ export const Voucher: React.FC<VoucherProps> = ({ items, total, storeAddress }) 
 
       <div className="space-y-4 mb-6">
         <h3 className="font-semibold text-lg">Detalle de productos</h3>
-        {items.map((item) => (
-          <div key={item.id} className="flex justify-between items-center border-b pb-2">
+        {items.map((item: CartItem) => (
+
+          <div key={item._id} className="flex justify-between items-center border-b pb-2">
             <div>
               <p className="font-medium">{item.name}</p>
               <p className="text-sm text-gray-600">
-                Cantidad: {item.quantity} x {formatCLP(item.price)}
+                Cantidad: {item.quantity} x {formatCLP(item.prices[item.size])
+                }
               </p>
             </div>
             <span className="font-medium">
-              {formatCLP(item.price * item.quantity)}
+            {formatCLP(item.prices[item.size] * item.quantity)}
             </span>
           </div>
         ))}

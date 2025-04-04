@@ -5,18 +5,24 @@ export interface BaseProduct {
   image: string;
   description: string;
   prices: { [key in Size]: number };
-  unitsPerPack?: { [key in Size]: number };
+  unitsPerPack: { [key in Size]: number };
+  stock: { [key in Size]: number };
+  brand: string;
+  category: string;
+  isFeatured: boolean;
 }
 
 export interface Product extends BaseProduct {
-  _id: string;
-  stock?: number;
+  _id?: string;
 }
+
 export interface CartItem extends Product {
   quantity: number;
-  unitsInPack?: number; // <- este es el nuevo campo
+  size: Size; // ✅ ← Esta es la clave para resolver los errores
+  unitsInPack?: number;
   formattedPrice: string;
 }
+
 
 export type PaymentMethod = 'cash' | 'card' | 'transfer';
 export type DeliveryMethod = 'pickup' | 'delivery';

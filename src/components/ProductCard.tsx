@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
-import { BaseProduct, Size } from '../types';
+import { Size } from '../types';
 import { useCart } from '../context/CartContext';
 import { formatCLP } from '../utils/currency';
 import { SIZES, SIZE_WEIGHTS } from '../App';
 import { Notification } from './Notification';
 import { Product } from '../types';
+import { CartItem } from '../types';
 
 interface ProductCardProps {
   product: Product;
@@ -20,26 +21,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   const handleAddToCart = () => {
     if (!selectedSize) return;
-  
-    const cartItem = {
+
+    const cartItem: CartItem = {
       _id: product._id,
+      size: selectedSize, // ✅ esto es lo que faltaba
       name: `${product.name} - Talla ${selectedSize}`,
       image: product.image,
       description: `${product.description} - Para bebés de ${SIZE_WEIGHTS[selectedSize]}`,
       prices: product.prices,
-      size: selectedSize,
+      unitsPerPack: product.unitsPerPack,
+      stock: product.stock,
+      brand: product.brand,
+      category: product.category,
+      isFeatured: product.isFeatured,
       quantity: 1,
-      unitsInPack: product.unitsPerPack?.[selectedSize] ?? 0,
-      stock: product.stock ?? 0,
-      formattedPrice: formatCLP(product.prices[selectedSize])
+      unitsInPack: product.unitsPerPack[selectedSize],
+      formattedPrice: formatCLP(product.prices[selectedSize]),
     };
-  
+
+
     dispatch({ type: 'ADD_ITEM', payload: cartItem });
-  
+
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 3000);
   };
- 
+
 
   return (
     <>

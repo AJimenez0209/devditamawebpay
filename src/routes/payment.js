@@ -1,8 +1,10 @@
-const express = require('express');
-const { WebpayPlus, Environment } = require('transbank-sdk');
-const dotenv = require('dotenv');
-const redis = require('redis');
-const Transaction = require('../models/Transaction'); // Asegúrate de que la ruta sea correcta
+import express from 'express';
+import dotenv from 'dotenv';
+import redis from 'redis';
+import Transaction from '../models/Transaction.js'; // Asegúrate de que también esté en formato ES Module
+import pkg from 'transbank-sdk';
+const { WebpayPlus, Environment } = pkg;
+
 
 dotenv.config();
 
@@ -19,8 +21,8 @@ const webpayPlus = new WebpayPlus.Transaction({
 const client = redis.createClient({
   url: process.env.REDIS_URL,
   socket: {
-    tls: false, // Activar conexión TLS o false si es local
-    rejectUnauthorized: false, // Permitir certificados autofirmados
+    tls: false,
+    rejectUnauthorized: false,
   },
 });
 
@@ -48,6 +50,7 @@ router.post('/create', async (req, res) => {
   }
 });
 
+// Ruta para consultar estado de la transacción
 router.post('/status', async (req, res) => {
   const { token_ws } = req.body;
 
@@ -71,7 +74,6 @@ router.post('/status', async (req, res) => {
   }
 });
 
-
 // Ruta para confirmar transacciones
 router.post('/confirm', async (req, res) => {
   const { token_ws } = req.body;
@@ -81,7 +83,6 @@ router.post('/confirm', async (req, res) => {
   }
 
   try {
-    // Revisar si el token ya está confirmado
     const tokenStatus = await client.get(token_ws);
 
     if (tokenStatus === 'confirmed') {
@@ -94,7 +95,6 @@ router.post('/confirm', async (req, res) => {
       return res.status(409).json({ status: 'processing', message: 'La transacción está siendo procesada.' });
     }
 
-    // Bloquea el token como "en proceso"
     const setProcessing = await client.set(token_ws, 'processing', { NX: true, EX: 60 });
 
     if (!setProcessing) {
@@ -102,18 +102,16 @@ router.post('/confirm', async (req, res) => {
       return res.status(409).json({ status: 'processing', message: 'La transacción está siendo procesada.' });
     }
 
-    // Confirmar transacción con Webpay
     const response = await webpayPlus.commit(token_ws);
 
     if (response.status === 'AUTHORIZED' && response.response_code === 0) {
       console.log('Transacción confirmada con éxito:', response);
 
-      // Guardar en MongoDB
-      await Transaction.create(response); // Asegúrate de que el modelo Transaction esté importado correctamente
+      await Transaction.create(response);
       console.log('Transacción guardada en MongoDB:', response);
 
-      // Marca como "confirmado"
       await client.set(token_ws, 'confirmed', { EX: 3600 });
+
       const toCamelCase = (data) => ({
         amount: data.amount,
         status: data.status,
@@ -132,21 +130,16 @@ router.post('/confirm', async (req, res) => {
         status: 'success',
         response: toCamelCase(response),
       });
-
     } else {
       console.error('Error en la confirmación:', response);
-      await client.del(token_ws); // Elimina el lock en caso de error
+      await client.del(token_ws);
       return res.status(400).json({ status: 'error', message: 'La transacción no fue autorizada', response });
     }
   } catch (error) {
     console.error('Error confirmando la transacción:', error);
-    await client.del(token_ws); // Libera el lock en caso de error
+    await client.del(token_ws);
     return res.status(500).json({ status: 'error', message: 'Error interno al confirmar la transacción', error: error.message });
   }
-
 });
 
-
-
-
-module.exports = router;
+export default router;

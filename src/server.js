@@ -1,20 +1,17 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const { join } = require('path');
-const connectDB = require('./config/database');
-const productRoutes = require('./routes/products');
-const orderRoutes = require('./routes/orders');
-const userRoutes = require('./routes/users');
-const paymentRoutes = require('./routes/payment');
-import productRoutes from './routes/productRoutes.js';
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import connectDB from './config/database.js';
+import productRoutes from './routes/products.js';
+import orderRoutes from './routes/orders.js';
+import userRoutes from './routes/users.js';
+import paymentRoutes from './routes/payment.js';
 
-
-console.log("Payment routes loaded");
-require('dotenv').config();
-
-
-
+// Necesario para usar __dirname con ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Configuración de variables de entorno
 dotenv.config();
@@ -38,16 +35,14 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payment', paymentRoutes);
 
-
 // Manejo de archivos estáticos en producción e integración
 if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'integracion') {
   app.use(express.static(join(__dirname, '../dist')));
-  
+
   app.get('*', (req, res) => {
     res.sendFile(join(__dirname, '../dist/index.html'));
   });
 }
-
 
 // Manejador de errores global
 app.use((err, req, res, next) => {
