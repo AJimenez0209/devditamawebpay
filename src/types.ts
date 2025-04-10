@@ -13,8 +13,10 @@ export interface BaseProduct {
 }
 
 export interface Product extends BaseProduct {
-  _id?: string;
+  _id: string;
+  sizes: string[];
 }
+
 
 export interface CartItem extends Product {
   quantity: number;
