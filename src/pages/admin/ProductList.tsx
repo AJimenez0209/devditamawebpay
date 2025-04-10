@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 interface Product {
@@ -77,7 +77,7 @@ const ProductList = () => {
             <tr key={p._id} className="border-t">
               <td className="p-2">{p.name}</td>
               <td className="p-2">${p.price}</td>
-              <td className="p-2">{p.sizes.join(', ')}</td>
+              <td className="p-2">{p.sizes?.join(', ') || 'Sin tallas'}</td>
               <td className="p-2 space-x-2">
                 <Link
                   to={`/admin/products/${p._id}`}

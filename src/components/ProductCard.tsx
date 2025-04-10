@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { Size } from '../types';
 import { useCart } from '../context/CartContext';
 import { formatCLP } from '../utils/currency';
-import { SIZES, SIZE_WEIGHTS } from '../App';
+import { SIZES, SIZE_WEIGHTS } from '../constants/sizes';
 import { Notification } from './Notification';
 import { Product } from '../types';
 import { CartItem } from '../types';

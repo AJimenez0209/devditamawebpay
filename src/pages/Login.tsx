@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
@@ -44,26 +44,37 @@ const Login = () => {
   };
 
   return (
-    <div>
-      <h2>Iniciar sesión</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Correo"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Ingresar</button>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-      </form>
+    <div className="min-h-screen bg-gradient-to-tr from-blue-100 to-indigo-300 flex items-center justify-center">
+      <div className="bg-white shadow-2xl rounded-xl p-8 w-full max-w-md">
+        <h2 className="text-2xl font-bold text-center mb-6 text-indigo-600">Iniciar sesión</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="email"
+            placeholder="Correo electrónico"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+          <button
+            type="submit"
+            className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition duration-200"
+          >
+            Ingresar
+          </button>
+          {error && (
+            <p className="text-red-500 text-sm text-center mt-2">{error}</p>
+          )}
+        </form>
+      </div>
     </div>
   );
 };
