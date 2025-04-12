@@ -1,21 +1,13 @@
 // src/layouts/AppLayout.tsx
 import { Outlet } from 'react-router-dom';
 import { CartProvider } from '../context/CartContext';
-import { Logo } from '../components/Logo';
-import AuthButton from '../components/AuthButton';
+import Header from '../components/Header'; // <-- Este es el correcto
 
 const AppLayout = () => {
   return (
     <CartProvider>
       <div className="min-h-screen bg-gray-100">
-        <header className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between">
-              <Logo />
-              <AuthButton />
-            </div>
-          </div>
-        </header>
+        <Header /> {/* Aquí dejamos tu Header limpio */}
 
         <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
           <Outlet />
