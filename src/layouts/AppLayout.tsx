@@ -1,5 +1,4 @@
 // src/layouts/AppLayout.tsx
-import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { CartProvider } from '../context/CartContext';
 import { Logo } from '../components/Logo';

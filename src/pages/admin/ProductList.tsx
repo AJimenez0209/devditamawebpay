@@ -56,8 +56,9 @@ const ProductList = () => {
   };
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">Productos</h2>
+    <>
+      <h3 className="text-xl font-semibold mb-4">Productos</h3>
+
       {error && <p className="text-red-500">{error}</p>}
 
       <table className="w-full table-auto border border-gray-300">
@@ -132,8 +133,7 @@ const ProductList = () => {
           ))}
         </tbody>
       </table>
-    </div>
+    </>
   );
-};
-
-export default ProductList;
+}
+  export default ProductList;
