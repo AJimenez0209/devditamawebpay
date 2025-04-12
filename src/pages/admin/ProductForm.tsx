@@ -1,148 +1,175 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Product, Size } from '../../types';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { SIZES } from '../../constants/sizes';
 
-const SIZES: Size[] = ['RN', 'P', 'M', 'G', 'XG', 'XXG', 'XXXG'];
+interface Product {
+  _id?: string;
+  name: string;
+  brand: string;
+  category: string;
+  description: string;
+  prices: Record<string, number>;
+  unitsPerPack: Record<string, number>;
+  stock: Record<string, number>;
+}
 
 const initialProduct: Product = {
-    _id: '',
-    name: '',
-    image: '',
-    description: '',
-    brand: '',
-    category: '',
-    isFeatured: false,
-    sizes: SIZES,
-    prices: Object.fromEntries(SIZES.map(s => [s, 0])) as Product['prices'],
-    unitsPerPack: Object.fromEntries(SIZES.map(s => [s, 0])) as Product['unitsPerPack'],
-    stock: Object.fromEntries(SIZES.map(s => [s, 0])) as Product['stock'],
+  name: '',
+  brand: '',
+  category: '',
+  description: '',
+  prices: Object.fromEntries(SIZES.map(size => [size, 0])),
+  unitsPerPack: Object.fromEntries(SIZES.map(size => [size, 0])),
+  stock: Object.fromEntries(SIZES.map(size => [size, 0])),
 };
 
 const ProductForm = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const [product, setProduct] = useState<Product>(initialProduct);
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const [product, setProduct] = useState<Product>(initialProduct);
+  const [error, setError] = useState('');
 
-    useEffect(() => {
-        if (id && id !== 'new') {
-            fetch(`/api/products/${id}`)
-                .then((res) => res.json())
-                .then((data) => setProduct(data));
-        }
-    }, [id]);
+  useEffect(() => {
+    if (id) {
+      const fetchProduct = async () => {
+        const res = await fetch(`http://localhost:5000/api/products/${id}`);
+        const data = await res.json();
+        setProduct(data);
+      };
+      fetchProduct();
+    }
+  }, [id]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value, type, checked } = e.target as HTMLInputElement;
+  const handleChange = (field: keyof Product, value: string) => {
+    setProduct({ ...product, [field]: value });
+  };
 
-        if (name.includes('.')) {
-            const [field, size] = name.split('.') as ['prices' | 'unitsPerPack' | 'stock', Size];
-            setProduct((prev) => ({
-                ...prev,
-                [field]: { ...prev[field], [size]: Number(value) },
-            }));
-        } else {
-            setProduct((prev) => ({
-                ...prev,
-                [name]: type === 'checkbox' ? checked : value,
-            }));
-        }
-    };
+  const handleSizeChange = (type: 'prices' | 'unitsPerPack' | 'stock', size: string, value: string) => {
+    setProduct({
+      ...product,
+      [type]: { ...product[type], [size]: Number(value) },
+    });
+  };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const method = id && id !== 'new' ? 'PUT' : 'POST';
-        const url = id && id !== 'new' ? `/api/products/${id}` : `/api/products`;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
 
-        const res = await fetch(url, {
-            method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(product),
-        });
+    const method = id ? 'PUT' : 'POST';
+    const url = id
+      ? `http://localhost:5000/api/products/${id}`
+      : 'http://localhost:5000/api/products';
 
-        if (res.ok) navigate('/admin/products');
-        else alert('Error al guardar producto');
-    };
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(product),
+      });
 
-    return (
-        <div className="p-6 max-w-4xl mx-auto">
-            <div className="flex justify-between items-center mb-4">
-                <h1 className="text-3xl font-bold text-gray-800">
-                    {id === 'new' ? 'Crear Producto' : `Editar Producto: ${product.name}`}
-                </h1>
+      if (!res.ok) throw new Error('Error al guardar');
 
+      navigate('/admin/products');
+    } catch (err) {
+      setError('Error al guardar producto');
+    }
+  };
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">{id ? 'Editar Producto' : 'Nuevo Producto'}</h2>
+
+      {error && <p className="text-red-500">{error}</p>}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+
+        <input
+          type="text"
+          placeholder="Nombre"
+          value={product.name}
+          onChange={(e) => handleChange('name', e.target.value)}
+          className="w-full border p-2"
+        />
+
+        <input
+          type="text"
+          placeholder="Marca"
+          value={product.brand}
+          onChange={(e) => handleChange('brand', e.target.value)}
+          className="w-full border p-2"
+        />
+
+        <input
+          type="text"
+          placeholder="Categoría"
+          value={product.category}
+          onChange={(e) => handleChange('category', e.target.value)}
+          className="w-full border p-2"
+        />
+
+        <textarea
+          placeholder="Descripción"
+          value={product.description}
+          onChange={(e) => handleChange('description', e.target.value)}
+          className="w-full border p-2"
+        />
+
+        <h3 className="text-xl font-semibold mb-2 text-blue-700">Precios y Stock por Tamaño</h3>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {SIZES.map((size) => (
+            <div key={size} className="border rounded p-4 bg-gray-50">
+              <h4 className="font-bold text-blue-600 mb-2">{size}</h4>
+
+              <label className="block text-sm text-gray-600 mb-1">Precio</label>
+              <input
+                type="number"
+                value={product.prices[size]}
+                onChange={(e) => handleSizeChange('prices', size, e.target.value)}
+                className="w-full border px-2 py-1 mb-2"
+              />
+
+              <label className="block text-sm text-gray-600 mb-1">Unidades por Paquete</label>
+              <input
+                type="number"
+                value={product.unitsPerPack[size]}
+                onChange={(e) => handleSizeChange('unitsPerPack', size, e.target.value)}
+                className="w-full border px-2 py-1 mb-2"
+              />
+
+              <label className="block text-sm text-gray-600 mb-1">Stock</label>
+              <input
+                type="number"
+                value={product.stock[size]}
+                onChange={(e) => handleSizeChange('stock', size, e.target.value)}
+                className="w-full border px-2 py-1"
+              />
             </div>
-
-            <form onSubmit={handleSubmit} className="space-y-10">
-                {/* Datos Generales */}
-                <div className="bg-white p-6 rounded-xl shadow-lg border">
-                    <h2 className="text-xl font-semibold text-blue-700 mb-4">Datos Generales</h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input className="input" name="name" placeholder="Nombre" value={product.name} onChange={handleChange} required />
-                        <input className="input" name="image" placeholder="URL Imagen" value={product.image} onChange={handleChange} required />
-                    </div>
-
-                    {product.image && (
-                        <div className="mt-4">
-                            <img src={product.image} alt={product.name} className="w-40 h-40 object-cover rounded border mx-auto" />
-                        </div>
-                    )}
-
-                    <textarea className="input mt-4" name="description" placeholder="Descripción" value={product.description} onChange={handleChange} required />
-                </div>
-
-                {/* Información Comercial */}
-                <div className="bg-white p-6 rounded-xl shadow-lg border">
-                    <h2 className="text-xl font-semibold text-blue-700 mb-4">Información Comercial</h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input className="input" name="brand" placeholder="Marca" value={product.brand} onChange={handleChange} />
-                        <input className="input" name="category" placeholder="Categoría" value={product.category} onChange={handleChange} />
-                    </div>
-
-                    <label className="flex items-center gap-2 mt-4">
-                        <input type="checkbox" name="isFeatured" checked={product.isFeatured} onChange={handleChange} />
-                        <span className="text-sm text-gray-700">Producto destacado</span>
-                    </label>
-                </div>
-
-                {/* Precios / Stock */}
-                <div className="bg-white p-6 rounded-xl shadow-lg border">
-                    <h2 className="text-xl font-semibold text-blue-700 mb-4">Precios y Stock por Tamaño</h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {SIZES.map((size) => (
-                            <div key={size} className="border p-4 rounded-lg bg-gray-50">
-                                <h3 className="font-semibold text-center mb-2 text-blue-600">{size}</h3>
-
-                                <input className="input mb-2" type="number" name={`prices.${size}`} placeholder="Precio" value={product.prices[size]} onChange={handleChange} />
-                                <input className="input mb-2" type="number" name={`unitsPerPack.${size}`} placeholder="Unidades Pack" value={product.unitsPerPack[size]} onChange={handleChange} />
-                                <input className="input" type="number" name={`stock.${size}`} placeholder="Stock" value={product.stock[size]} onChange={handleChange} />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="flex justify-center items-center gap-4 mt-6">
-                    <button
-                        type="submit"
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-md transition"
-                    >
-                        {id === 'new' ? 'Crear Producto' : 'Actualizar Producto'}
-                    </button>
-
-                    <Link
-                        to="/admin/products"
-                        className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 transition"
-                    >
-                        Volver a Productos
-                    </Link>
-                </div>
-
-
-            </form>
+          ))}
         </div>
-    );
+
+        <div className="flex justify-end space-x-2">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded"
+          >
+            Volver
+          </button>
+
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+          >
+            {id ? 'Actualizar Producto' : 'Agregar Producto'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 };
 
 export default ProductForm;

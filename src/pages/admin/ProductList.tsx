@@ -59,6 +59,15 @@ const ProductList = () => {
     <>
       <h3 className="text-xl font-semibold mb-4">Productos</h3>
 
+      <div className="flex justify-end mb-4">
+        <Link
+          to="/admin/products/new"
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+        >
+          Agregar Producto
+        </Link>
+      </div>
+
       {error && <p className="text-red-500">{error}</p>}
 
       <table className="w-full table-auto border border-gray-300">
@@ -71,6 +80,7 @@ const ProductList = () => {
             <th className="p-2">Acciones</th>
           </tr>
         </thead>
+
 
         <tbody>
           {products.map((p) => (
@@ -136,4 +146,4 @@ const ProductList = () => {
     </>
   );
 }
-  export default ProductList;
+export default ProductList;
