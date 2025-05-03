@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { validateProduct, Product } from '../../utils/validateProduct';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import API_BASE_URL from '../../utils/config';
+import { validateProduct, Product } from '../../utils/validateProduct';
 
 const ProductList = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -12,7 +13,7 @@ const ProductList = () => {
       const token = localStorage.getItem('token');
 
       try {
-        const res = await fetch('http://localhost:5000/api/products', {
+        const res = await fetch(`${API_BASE_URL}/api/products`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -40,7 +41,7 @@ const ProductList = () => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar este producto?')) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/products/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -56,94 +57,87 @@ const ProductList = () => {
   };
 
   return (
-    <>
-      <h3 className="text-xl font-semibold mb-4">Productos</h3>
-
-      <div className="flex justify-end mb-4">
+    <div className="px-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-bold text-gray-800">Productos</h2>
         <Link
           to="/admin/products/new"
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 shadow-md"
         >
-          Agregar Producto
+          ➕ Agregar Producto
         </Link>
       </div>
 
-      {error && <p className="text-red-500">{error}</p>}
+      {error && <p className="text-red-500 mb-4 font-semibold">{error}</p>}
 
-      <table className="w-full table-auto border border-gray-300">
-        <thead>
-          <tr className="bg-gray-100 text-left">
-            <th className="p-2">Imagen</th>
-            <th className="p-2">Nombre</th>
-            <th className="p-2">Precios</th>
-            <th className="p-2">Tamaños</th>
-            <th className="p-2">Acciones</th>
-          </tr>
-        </thead>
-
-
-        <tbody>
-          {products.map((p) => (
-            <tr key={p._id} className="border-t">
-              <td className="p-2">
-                <img
-                  src={p.image}
-                  alt={p.name}
-                  className="w-16 h-16 object-cover rounded"
-                />
-              </td>
-
-              <td className="p-2">{p.name}</td>
-
-              <td className="p-2">
-                {p.prices ? (
-                  <div className="text-sm">
-                    {Object.entries(p.prices).map(([size, price]) => (
-                      <div key={size} className="flex justify-between">
-                        <span className="font-medium text-gray-600">{size}:</span>
-                        <span>${price.toLocaleString('es-CL')}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : 'Sin precios'}
-              </td>
-
-              <td className="p-2">
-                {p.sizes.length > 0 ? (
-                  <div className="flex flex-wrap gap-1">
-                    {p.sizes.map((size) => (
-                      <span
-                        key={size}
-                        className="bg-blue-100 text-blue-700 px-2 py-0.5 text-xs rounded-md border border-blue-200"
-                      >
-                        {size}
-                      </span>
-                    ))}
-                  </div>
-                ) : 'Sin tallas'}
-              </td>
-
-              <td className="p-2 flex gap-2">
-                <Link
-                  to={`/admin/products/${p._id}`}
-                  className="text-blue-600 hover:text-blue-800"
-                  title="Editar"
-                >
-                  <PencilIcon className="h-5 w-5" />
-                </Link>
-                <button
-                  onClick={() => handleDelete(p._id)}
-                  className="text-red-600 hover:text-red-800"
-                  title="Eliminar"
-                >
-                  <TrashIcon className="h-5 w-5" />
-                </button>
-              </td>
+      <div className="overflow-x-auto rounded-lg shadow-md bg-white">
+        <table className="w-full text-sm text-left text-gray-700">
+          <thead className="bg-blue-50 text-blue-800 uppercase text-xs">
+            <tr>
+              <th className="px-6 py-4">Imagen</th>
+              <th className="px-6 py-4">Nombre</th>
+              <th className="px-6 py-4">Precios</th>
+              <th className="px-6 py-4">Tamaños</th>
+              <th className="px-6 py-4 text-center">Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </>
+          </thead>
+          <tbody>
+            {products.map((p, idx) => (
+              <tr key={p._id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <td className="px-6 py-4">
+                  {p.image ? (
+                    <img src={p.image} alt={p.name} className="h-16 w-16 object-cover rounded-lg shadow-sm" />
+                  ) : (
+                    <span className="text-xs text-gray-400">Sin imagen</span>
+                  )}
+                </td>
+                <td className="px-6 py-4 font-semibold text-gray-800">{p.name}</td>
+                <td className="px-6 py-4 whitespace-pre-line text-gray-700">
+                  {Object.entries(p.prices || {}).map(([size, price]) => (
+                    <div key={size} className="text-sm">
+                      <span className="font-medium text-gray-600">{size}:</span> ${price.toLocaleString('es-CL')}
+                    </div>
+                  ))}
+                </td>
+                <td className="px-6 py-4">
+                  {p.sizes?.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {p.sizes.map((size) => (
+                        <span
+                          key={size}
+                          className="bg-blue-100 text-blue-700 px-2 py-0.5 text-xs rounded-full border border-blue-200"
+                        >
+                          {size}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">Sin tallas</span>
+                  )}
+                </td>
+                <td className="px-6 py-4 text-center space-x-3">
+                  <Link
+                    to={`/admin/products/${p._id}`}
+                    className="inline-flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-700 p-2 rounded-full"
+                    title="Editar"
+                  >
+                    <PencilIcon className="h-4 w-4" />
+                  </Link>
+                  <button
+                    onClick={() => handleDelete(p._id)}
+                    className="inline-flex items-center justify-center bg-red-100 hover:bg-red-200 text-red-700 p-2 rounded-full"
+                    title="Eliminar"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
-}
+};
+
 export default ProductList;

@@ -1,13 +1,15 @@
-import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaUserCircle } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
 const ProfileMenu = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    logout();
     navigate('/login');
   };
 
@@ -23,18 +25,29 @@ const ProfileMenu = () => {
 
       {open && (
         <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-md z-10">
-          <button
-            onClick={() => navigate('/admin/products')}
-            className="w-full text-left px-4 py-2 hover:bg-gray-100"
-          >
-            Administrar Panel
-          </button>
-          <button
-            onClick={handleLogout}
-            className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
-          >
-            Cerrar Sesión
-          </button>
+          {isAuthenticated ? (
+            <>
+              <button
+                onClick={() => navigate('/admin/products')}
+                className="w-full text-left px-4 py-2 hover:bg-gray-100"
+              >
+                Administrar Panel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
+              >
+                Cerrar Sesión
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => navigate('/login')}
+              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-blue-600"
+            >
+              Iniciar Sesión
+            </button>
+          )}
         </div>
       )}
     </div>

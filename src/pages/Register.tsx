@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const Login = () => {
+const Register = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -17,7 +17,7 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await fetch('/api/users/login', {
+      const response = await fetch('/api/users/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -25,10 +25,10 @@ const Login = () => {
 
       const data = await response.json();
 
-      if (!response.ok) throw new Error(data.message || 'Error al iniciar sesión');
+      if (!response.ok) throw new Error(data.message || 'Error al registrarse');
 
       login(data.data.token); // Guarda el token
-      window.location.href = '/admin/products'; // Redirige y recarga (se actualiza header)
+      window.location.href = '/admin/products'; // Redirige y recarga
     } catch (err: any) {
       setError(err.message);
     }
@@ -36,9 +36,18 @@ const Login = () => {
 
   return (
     <div className="max-w-md mx-auto mt-20 p-6 bg-white shadow-md rounded">
-      <h2 className="text-xl font-semibold mb-4">Iniciar Sesión</h2>
+      <h2 className="text-xl font-semibold mb-4">Registrarse</h2>
       {error && <p className="text-red-500 mb-2">{error}</p>}
       <form onSubmit={handleSubmit}>
+        <input
+          name="name"
+          type="text"
+          placeholder="Nombre"
+          value={form.name}
+          onChange={handleChange}
+          className="w-full p-2 border rounded mb-4"
+          required
+        />
         <input
           name="email"
           type="email"
@@ -59,13 +68,13 @@ const Login = () => {
         />
         <button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded"
+          className="w-full bg-green-600 hover:bg-green-700 text-white p-2 rounded"
         >
-          Entrar
+          Registrarse
         </button>
       </form>
     </div>
   );
 };
 
-export default Login;
+export default Register;

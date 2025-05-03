@@ -1,18 +1,26 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { User } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Header = () => {
   const [open, setOpen] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
   let timeout: NodeJS.Timeout;
 
   const handleMouseEnter = () => {
-    clearTimeout(timeout); // Evita que se cierre si está entrando de nuevo
+    clearTimeout(timeout);
     setOpen(true);
   };
 
   const handleMouseLeave = () => {
-    timeout = setTimeout(() => setOpen(false), 200); // Delay de 200ms
+    timeout = setTimeout(() => setOpen(false), 200);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (
@@ -38,18 +46,23 @@ const Header = () => {
             onMouseLeave={handleMouseLeave}
             className="absolute right-0 mt-2 w-40 bg-white border rounded-lg shadow-md"
           >
-            <Link to="/admin/products" className="block px-4 py-2 hover:bg-gray-100">
-              Administrar Panel
-            </Link>
-            <button
-              onClick={() => {
-                localStorage.removeItem('token');
-                window.location.href = '/login';
-              }}
-              className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
-            >
-              Cerrar Sesión
-            </button>
+            {isAuthenticated ? (
+              <>
+                <Link to="/admin/products" className="block px-4 py-2 hover:bg-gray-100">
+                  Administrar Panel
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
+                >
+                  Cerrar Sesión
+                </button>
+              </>
+            ) : (
+              <Link to="/login" className="block px-4 py-2 hover:bg-gray-100">
+                Iniciar Sesión
+              </Link>
+            )}
           </div>
         )}
       </div>

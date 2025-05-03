@@ -3,12 +3,14 @@ import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { HomeIcon, UserIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Logo } from '../Logo';
+import { useAuth } from '../../context/AuthContext';
 
 const HeaderAdmin = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    logout();
     navigate('/login');
   };
 
