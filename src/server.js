@@ -11,6 +11,7 @@ import orderRoutes from './routes/orders.js';
 import userRoutes from './routes/users.js';
 import paymentRoutes from './routes/payment.js';
 import adminRoutes from './routes/adminRoutes.js';
+import path from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -31,12 +32,17 @@ connectDB().catch((error) => {
 app.use(cors());
 app.use(express.json());
 
+// 🔥 SERVIR IMÁGENES
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
 // Rutas de la API
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api', adminRoutes);
+
+
 
 // Archivos estáticos si estamos en producción o integración
 if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'integracion') {

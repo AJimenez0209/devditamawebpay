@@ -1,5 +1,4 @@
 import express from 'express';
-import Product from '../src/models/ProductModel.js';
 import {
   getAllProducts,
   getProductById,
@@ -7,21 +6,24 @@ import {
   updateProduct,
   deleteProduct,
 } from '../controllers/productController.js';
+import upload from '../middleware/uploadImage.js';
+import { protect, admin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.route('/').get(getAllProducts).post(createProduct);
-router.route('/:id').get(getProductById).put(updateProduct).delete(deleteProduct);
+// GET /api/products — público
+router.get('/', getAllProducts);
 
-// GET /api/products
-router.get('/', async (req, res) => {
-  try {
-    const products = await Product.find();
-    res.json(products);
-  } catch (error) {
-    console.error('Error al obtener productos:', error);
-    res.status(500).json({ message: 'Error al obtener productos' });
-  }
-});
+// GET /api/products/:id — público
+router.get('/:id', getProductById);
+
+// POST /api/products — requiere autenticación y archivo de imagen
+router.post('/', protect, admin, upload.single('image'), createProduct);
+
+// PUT /api/products/:id — requiere autenticación y archivo de imagen
+router.put('/:id', protect, admin, upload.single('image'), updateProduct);
+
+// DELETE /api/products/:id — requiere autenticación
+router.delete('/:id', protect, admin, deleteProduct);
 
 export default router;

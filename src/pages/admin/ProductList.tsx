@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import API_BASE_URL from '../../utils/config';
@@ -76,8 +76,8 @@ const ProductList = () => {
             <tr>
               <th className="px-6 py-4">Imagen</th>
               <th className="px-6 py-4">Nombre</th>
-              <th className="px-6 py-4">Precios</th>
-              <th className="px-6 py-4">Tamaños</th>
+              <th className="px-6 py-4">Tallas y Precios</th>
+              <th className="px-6 py-4">Stock por Talla</th>
               <th className="px-6 py-4 text-center">Acciones</th>
             </tr>
           </thead>
@@ -86,35 +86,47 @@ const ProductList = () => {
               <tr key={p._id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                 <td className="px-6 py-4">
                   {p.image ? (
-                    <img src={p.image} alt={p.name} className="h-16 w-16 object-cover rounded-lg shadow-sm" />
+                    <img
+                      src={p.image.startsWith('http') ? p.image : `${API_BASE_URL}/uploads/${p.image}`}
+                      alt={p.name}
+                      className="h-16 w-16 object-cover rounded-lg shadow-sm"
+                    />
+
                   ) : (
                     <span className="text-xs text-gray-400">Sin imagen</span>
                   )}
                 </td>
                 <td className="px-6 py-4 font-semibold text-gray-800">{p.name}</td>
-                <td className="px-6 py-4 whitespace-pre-line text-gray-700">
-                  {Object.entries(p.prices || {}).map(([size, price]) => (
-                    <div key={size} className="text-sm">
-                      <span className="font-medium text-gray-600">{size}:</span> ${price.toLocaleString('es-CL')}
-                    </div>
-                  ))}
-                </td>
+
+                {/* TALLAS Y PRECIOS */}
                 <td className="px-6 py-4">
-                  {p.sizes?.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {p.sizes.map((size) => (
-                        <span
-                          key={size}
-                          className="bg-blue-100 text-blue-700 px-2 py-0.5 text-xs rounded-full border border-blue-200"
-                        >
-                          {size}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-gray-400">Sin tallas</span>
-                  )}
+                  <div className="grid grid-cols-2 gap-x-4">
+                    <div className="text-xs font-semibold text-gray-600">Talla</div>
+                    <div className="text-xs font-semibold text-gray-600">Precio</div>
+
+                    {Object.entries(p.prices || {}).map(([size, price]) => (
+                      <Fragment key={size}>
+                        <div className="text-sm text-gray-700">{size}</div>
+                        <div className="text-sm text-gray-800">
+                          ${price.toLocaleString('es-CL')}
+                        </div>
+                      </Fragment>
+                    ))}
+                  </div>
                 </td>
+
+                {/* STOCK POR TALLA */}
+                <td className="px-6 py-4">
+                  <div className="flex flex-col gap-1">
+                    {Object.entries(p.stock || {}).map(([size, qty]) => (
+                      <div key={size} className="text-sm text-gray-800">
+                        {qty}
+                      </div>
+                    ))}
+                  </div>
+                </td>
+
+
                 <td className="px-6 py-4 text-center space-x-3">
                   <Link
                     to={`/admin/products/${p._id}`}
